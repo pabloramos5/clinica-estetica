@@ -1,0 +1,205 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum UserRole {
+    ADMIN
+    MEDICO
+    AUXILIAR
+    RECEPCION
+    CONTABILIDAD
+}
+
+enum AppointmentStatus {
+    PROGRAMADA
+    CONFIRMADA
+    EN_CURSO
+    COMPLETADA
+    CANCELADA
+    NO_SHOW
+}
+
+enum DocumentType {
+    DNI
+    NIE
+    PASAPORTE
+    OTRO
+}
+
+enum Gender {
+    M
+    F
+    O
+}
+
+// =====================================================
+// MODELOS
+// =====================================================
+
+model User {
+    id             String    @id @default(uuid())
+    email          String    @unique
+    passwordHash   String    @map("password_hash")
+    role           UserRole  @default(RECEPCION)
+    active         Boolean   @default(true)
+    lastAccess     DateTime? @map("last_access")
+    failedAttempts Int       @default(0) @map("failed_attempts")
+    lockedUntil    DateTime? @map("locked_until")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("users")
+}
+
+model Patient {
+    id                  String       @id @default(uuid())
+    medicalRecordNumber String       @unique @map("medical_record_number")
+    firstName           String       @map("first_name")
+    lastName            String       @map("last_name")
+    documentType        DocumentType @map("document_type")
+    documentNumber      String       @unique @map("document_number")
+    birthDate           DateTime     @map("birth_date")
+    gender              Gender
+    phone               String
+    alternativePhone    String?      @map("alternative_phone")
+    email               String?
+    address             String?
+    postalCode          String?      @map("postal_code")
+    city                String?
+    province            String?
+    country             String       @default("España")
+
+    bloodType         String? @map("blood_type")
+    allergies         String? @db.Text
+    currentMedication String? @map("current_medication") @db.Text
+    chronicDiseases   String? @map("chronic_diseases") @db.Text
+
+    emergencyContactName  String? @map("emergency_contact_name")
+    emergencyContactPhone String? @map("emergency_contact_phone")
+
+    observations String? @db.Text
+    isVIP        Boolean @default(false) @map("is_vip")
+
+    dataConsent      Boolean   @default(false) @map("data_consent")
+    imageConsent     Boolean   @default(false) @map("image_consent")
+    marketingConsent Boolean   @default(false) @map("marketing_consent")
+    consentDate      DateTime? @map("consent_date")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    appointments Appointment[]
+
+    @@index([documentNumber])
+    @@index([firstName])
+    @@index([lastName])
+    @@map("patients")
+}
+
+model Staff {
+    id             String       @id @default(uuid())
+    userId         String?      @unique @map("user_id")
+    employeeNumber String       @unique @map("employee_number")
+    firstName      String       @map("first_name")
+    lastName       String       @map("last_name")
+    documentType   DocumentType @map("document_type")
+    documentNumber String       @unique @map("document_number")
+    licenseNumber  String?      @map("license_number")
+    specialty      String?
+    phone          String
+    position       String?
+    department     String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    appointmentsAsDoctor Appointment[] @relation("DoctorAppointments")
+
+    @@map("staff")
+}
+
+model Room {
+    id            String  @id @default(uuid())
+    code          String  @unique
+    name          String
+    floor         Int?
+    type          String?
+    capacity      Int     @default(2)
+    active        Boolean @default(true)
+    calendarColor String? @map("calendar_color")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    appointments Appointment[]
+
+    @@map("rooms")
+}
+
+model Treatment {
+    id              String  @id @default(uuid())
+    code            String  @unique
+    name            String
+    description     String? @db.Text
+    durationMinutes Int     @map("duration_minutes")
+    price           Decimal @db.Decimal(10, 2)
+    vatPercentage   Decimal @default(21) @map("vat_percentage") @db.Decimal(5, 2)
+
+    requiresDoctor  Boolean @default(true) @map("requires_doctor")
+    requiresConsent Boolean @default(true) @map("requires_consent")
+
+    active Boolean @default(true)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    appointments Appointment[]
+
+    @@map("treatments")
+}
+
+model Appointment {
+    id          String @id @default(uuid())
+    patientId   String @map("patient_id")
+    doctorId    String @map("doctor_id")
+    roomId      String @map("room_id")
+    treatmentId String @map("treatment_id")
+
+    startDateTime DateTime          @map("start_date_time")
+    endDateTime   DateTime          @map("end_date_time")
+    status        AppointmentStatus @default(PROGRAMADA)
+
+    consultReason String? @map("consult_reason") @db.Text
+    notes         String? @db.Text
+
+    confirmed        Boolean   @default(false)
+    confirmationDate DateTime? @map("confirmation_date")
+    reminderSent     Boolean   @default(false) @map("reminder_sent")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    patient   Patient   @relation(fields: [patientId], references: [id])
+    doctor    Staff     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+    room      Room      @relation(fields: [roomId], references: [id])
+    treatment Treatment @relation(fields: [treatmentId], references: [id])
+
+    @@index([startDateTime])
+    @@index([patientId])
+    @@index([doctorId])
+    @@index([status])
+    @@map("appointments")
+}

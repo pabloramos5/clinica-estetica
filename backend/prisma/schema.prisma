@@ -1,0 +1,470 @@
+// This is your Prisma schema file
+// Actualizado basándose en la base de datos actual de la clínica
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum UserRole {
+    ADMIN
+    MEDICO
+    AUXILIAR
+    RECEPCION
+    CONTABILIDAD
+}
+
+enum AppointmentStatus {
+    PROGRAMADA
+    CONFIRMADA
+    EN_CURSO
+    COMPLETADA
+    CANCELADA
+    NO_SHOW
+}
+
+enum DocumentType {
+    DNI
+    NIE
+    PASAPORTE
+    OTRO
+}
+
+enum Gender {
+    M
+    F
+    O
+}
+
+enum InvoiceStatus {
+    BORRADOR
+    EMITIDA
+    PAGADA
+    ANULADA
+    DEVUELTA
+}
+
+enum PaymentMethod {
+    EFECTIVO
+    TARJETA
+    TRANSFERENCIA
+    BIZUM
+    OTRO
+}
+
+enum TreatmentType {
+    BOTOX
+    LASER
+    PEELING
+    INFILTRACION
+    FLEBOLOGIA
+    DIETA
+    OTRO
+}
+
+// =====================================================
+// MODELOS PRINCIPALES
+// =====================================================
+
+model User {
+    id             String    @id @default(uuid())
+    email          String    @unique
+    username       String    @unique
+    passwordHash   String    @map("password_hash")
+    role           UserRole  @default(RECEPCION)
+    active         Boolean   @default(true)
+    lastAccess     DateTime? @map("last_access")
+    failedAttempts Int       @default(0) @map("failed_attempts")
+    lockedUntil    DateTime? @map("locked_until")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("users")
+}
+
+// Basado en tabla Clientes
+model Patient {
+    id         String @id @default(uuid())
+    codCliente Int?   @unique @map("cod_cliente") // Para mantener referencia con sistema antiguo
+
+    // Datos personales
+    firstName      String       @map("first_name")
+    lastName       String       @map("last_name")
+    alias          String?
+    documentType   DocumentType @map("document_type")
+    documentNumber String       @unique @map("document_number")
+    birthDate      DateTime?    @map("birth_date")
+    gender         Gender?
+    profession     String?
+
+    // Contacto
+    phone            String
+    alternativePhone String? @map("alternative_phone")
+    mobile           String?
+    email            String?
+    fax              String?
+
+    // Dirección
+    address    String?
+    city       String?
+    postalCode String? @map("postal_code")
+    province   String?
+    country    String  @default("España")
+
+    // Datos bancarios
+    bankName    String? @map("bank_name")
+    bankAccount String? @map("bank_account")
+
+    // Marketing
+    wantsSMS   Boolean @default(false) @map("wants_sms")
+    wantsEmail Boolean @default(true) @map("wants_email")
+
+    // Observaciones
+    observations String? @db.Text
+
+    // GDPR
+    dataConsent      Boolean   @default(false) @map("data_consent")
+    imageConsent     Boolean   @default(false) @map("image_consent")
+    marketingConsent Boolean   @default(false) @map("marketing_consent")
+    consentDate      DateTime? @map("consent_date")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relaciones
+    appointments     Appointment[]
+    medicalHistories MedicalHistory[]
+    invoices         Invoice[]
+    treatments       TreatmentEvolution[]
+
+    @@index([documentNumber])
+    @@index([firstName])
+    @@index([lastName])
+    @@index([codCliente])
+    @@map("patients")
+}
+
+// Basado en tabla Medicos
+model Staff {
+    id        String @id @default(uuid())
+    medicoCod Int?   @unique @map("medico_cod") // Referencia sistema antiguo
+
+    firstName        String       @map("first_name")
+    lastName         String       @map("last_name")
+    documentType     DocumentType @map("document_type")
+    documentNumber   String       @unique @map("document_number")
+    licenseNumber    String?      @map("license_number")
+    specialty        String?
+    defaultTreatment String?      @map("default_treatment")
+
+    phone String
+    email String?
+
+    active Boolean @default(true)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relaciones
+    appointmentsAsDoctor Appointment[]        @relation("DoctorAppointments")
+    medicalHistories     MedicalHistory[]
+    treatmentEvolutions  TreatmentEvolution[]
+
+    @@map("staff")
+}
+
+// Basado en tabla Salas
+model Room {
+    id      String @id @default(uuid())
+    salaCod Int?   @unique @map("sala_cod") // Referencia sistema antiguo
+
+    name         String  @unique
+    capacity     Int     @default(2)
+    observations String? @db.Text
+    active       Boolean @default(true)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relaciones
+    appointments Appointment[]
+
+    @@map("rooms")
+}
+
+// Basado en tabla Tratamientos
+model Treatment {
+    id      String @id @default(uuid())
+    tratCod Int?   @unique @map("trat_cod") // Referencia sistema antiguo
+
+    name          String  @unique
+    duration      Int     @map("duration_minutes") // en minutos
+    defaultDoctor String? @map("default_doctor")
+    observations  String? @db.Text
+
+    // Precios y facturación
+    price         Decimal @default(0) @db.Decimal(10, 2)
+    vatPercentage Decimal @default(21) @map("vat_percentage") @db.Decimal(5, 2)
+
+    active Boolean @default(true)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relaciones
+    appointments        Appointment[]
+    treatmentEvolutions TreatmentEvolution[]
+
+    @@map("treatments")
+}
+
+// Basado en tabla Diario
+model Appointment {
+    id        String @id @default(uuid())
+    codDiario Int?   @unique @map("cod_diario") // Referencia sistema antiguo
+
+    patientId   String @map("patient_id")
+    doctorId    String @map("doctor_id")
+    roomId      String @map("room_id")
+    treatmentId String @map("treatment_id")
+
+    date      DateTime @db.Date
+    startTime DateTime @map("start_time")
+    endTime   DateTime @map("end_time")
+
+    status AppointmentStatus @default(PROGRAMADA)
+
+    observations String? @db.Text
+
+    confirmed        Boolean   @default(false)
+    confirmationDate DateTime? @map("confirmation_date")
+    reminderSent     Boolean   @default(false) @map("reminder_sent")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relaciones
+    patient   Patient   @relation(fields: [patientId], references: [id])
+    doctor    Staff     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+    room      Room      @relation(fields: [roomId], references: [id])
+    treatment Treatment @relation(fields: [treatmentId], references: [id])
+
+    @@index([date])
+    @@index([patientId])
+    @@index([doctorId])
+    @@index([status])
+    @@map("appointments")
+}
+
+// Basado en tabla HistoriaClinica
+model MedicalHistory {
+    id       String @id @default(uuid())
+    contador Int?   @unique // Referencia sistema antiguo
+
+    patientId String @map("patient_id")
+    doctorId  String @map("doctor_id")
+
+    date DateTime @default(now())
+
+    // Historia médica
+    photography     String? // URL o path de foto
+    consent         String? // URL o path del consentimiento
+    clinicTreatment String? @map("clinic_treatment") @db.Text
+    diseases        String? @db.Text
+    allergies       String? @db.Text
+    medications     String? @db.Text
+    smoker          Boolean @default(false)
+
+    // Tratamiento actual
+    currentTreatment String?  @map("current_treatment") @db.Text
+    treatmentOK      Boolean? @map("treatment_ok")
+    creams           String?  @db.Text
+
+    // Antecedentes
+    hematomas Boolean @default(false)
+    keloid    Boolean @default(false)
+
+    // Exploración
+    exploration       String? @db.Text
+    otherObservations String? @map("other_observations") @db.Text
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relaciones
+    patient Patient @relation(fields: [patientId], references: [id])
+    doctor  Staff   @relation(fields: [doctorId], references: [id])
+
+    @@index([patientId])
+    @@index([date])
+    @@map("medical_histories")
+}
+
+// Para evoluciones de tratamientos (unifica Botox, Laser, Peeling, etc.)
+model TreatmentEvolution {
+    id String @id @default(uuid())
+
+    patientId   String @map("patient_id")
+    treatmentId String @map("treatment_id")
+    doctorId    String @map("doctor_id")
+
+    treatmentType TreatmentType @map("treatment_type")
+    date          DateTime
+
+    // Campos genéricos para todos los tratamientos
+    zone         String? // Zona tratada
+    dose         String? // Dosis aplicada
+    product      String? // Producto usado
+    observations String? @db.Text
+
+    // Campos específicos según tipo (se usan según necesidad)
+    numInjections Int?   @map("num_injections") // Para Botox
+    pulse         Float? // Para Laser
+    spot          Float? // Para Laser
+    power         Float? // Para Laser
+    numShots      Int?   @map("num_shots") // Para Laser
+    volume        Float? // Para infiltraciones
+
+    // Facturación
+    amount   Decimal @default(0) @db.Decimal(10, 2)
+    billable Boolean @default(true)
+    billed   Boolean @default(false)
+    closed   Boolean @default(false)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relaciones
+    patient   Patient   @relation(fields: [patientId], references: [id])
+    treatment Treatment @relation(fields: [treatmentId], references: [id])
+    doctor    Staff     @relation(fields: [doctorId], references: [id])
+
+    @@index([patientId])
+    @@index([date])
+    @@index([treatmentType])
+    @@map("treatment_evolutions")
+}
+
+// Basado en tabla Factura
+model Invoice {
+    id       String @id @default(uuid())
+    contador Int?   @unique // Referencia sistema antiguo
+
+    // Numeración
+    invoiceNumber Int     @map("invoice_number")
+    invoiceYear   Int     @map("invoice_year")
+    invoiceSeries String? @map("invoice_series")
+
+    // Datos del cliente
+    patientId        String  @map("patient_id")
+    fiscalName       String  @map("fiscal_name")
+    fiscalId         String  @map("fiscal_id")
+    fiscalAddress    String  @map("fiscal_address") @db.Text
+    fiscalCity       String? @map("fiscal_city")
+    fiscalPostalCode String? @map("fiscal_postal_code")
+    fiscalProvince   String? @map("fiscal_province")
+
+    // Fechas
+    issueDate DateTime  @map("issue_date")
+    dueDate   DateTime? @map("due_date")
+
+    // Importes
+    subtotal           Decimal @db.Decimal(10, 2)
+    commercialDiscount Decimal @default(0) @map("commercial_discount") @db.Decimal(5, 2)
+    totalDiscount      Decimal @default(0) @map("total_discount") @db.Decimal(10, 2)
+    taxableBase        Decimal @map("taxable_base") @db.Decimal(10, 2)
+    totalVat           Decimal @map("total_vat") @db.Decimal(10, 2)
+    totalAmount        Decimal @map("total_amount") @db.Decimal(10, 2)
+
+    // Estado y pagos
+    status        InvoiceStatus  @default(BORRADOR)
+    paid          Boolean        @default(false)
+    paymentDate   DateTime?      @map("payment_date")
+    paymentMethod PaymentMethod? @map("payment_method")
+
+    observations String? @db.Text
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    // Relaciones
+    patient      Patient       @relation(fields: [patientId], references: [id])
+    invoiceLines InvoiceLine[]
+
+    @@unique([invoiceNumber, invoiceYear, invoiceSeries])
+    @@index([patientId])
+    @@index([issueDate])
+    @@index([status])
+    @@map("invoices")
+}
+
+// Basado en tabla DescFactura
+model InvoiceLine {
+    id String @id @default(uuid())
+
+    invoiceId  String @map("invoice_id")
+    lineNumber Int    @map("line_number")
+
+    // Descripción
+    concept     String  @db.Text
+    productName String? @map("product_name")
+
+    // Cantidades y precios
+    quantity           Decimal @default(1) @db.Decimal(10, 2)
+    unitPrice          Decimal @map("unit_price") @db.Decimal(10, 2)
+    discountPercentage Decimal @default(0) @map("discount_percentage") @db.Decimal(5, 2)
+
+    // IVA
+    vatPercentage Decimal @default(21) @map("vat_percentage") @db.Decimal(5, 2)
+
+    // Totales de línea
+    subtotal    Decimal @db.Decimal(10, 2)
+    vatAmount   Decimal @map("vat_amount") @db.Decimal(10, 2)
+    totalAmount Decimal @map("total_amount") @db.Decimal(10, 2)
+
+    createdAt DateTime @default(now()) @map("created_at")
+
+    // Relaciones
+    invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+    @@map("invoice_lines")
+}
+
+// Tabla para SMS enviados (basado en SMSsEnviados)
+model SMSSent {
+    id String @id @default(uuid())
+
+    patientId String   @map("patient_id")
+    date      DateTime
+    phone     String
+    message   String?  @db.Text
+    sentCount Int      @default(1) @map("sent_count")
+    sentBy    String?  @map("sent_by")
+
+    createdAt DateTime @default(now()) @map("created_at")
+
+    @@map("sms_sent")
+}
+
+// Tabla para configuración (simplificada de las múltiples tablas de configuración)
+model Configuration {
+    id          String  @id @default(uuid())
+    key         String  @unique
+    value       Json
+    category    String // 'empresa', 'email', 'sms', 'facturacion', etc.
+    description String?
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@map("configuration")
+}
