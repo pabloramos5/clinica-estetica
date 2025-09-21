@@ -1,16 +1,18 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
   Delete,
-  Body, 
-  Param, 
-  Query, 
-  UseGuards 
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus
 } from '@nestjs/common';
 import { PatientsService } from './patients.service';
-import { CreatePatientDto, UpdatePatientDto } from './dto/patient.dto';
+import { CreatePatientDto, UpdatePatientDto, SearchPatientsDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('patients')
@@ -19,55 +21,54 @@ export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
   @Post()
-  create(@Body() createPatientDto: CreatePatientDto) {
-    return this.patientsService.create(createPatientDto);
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() createPatientDto: CreatePatientDto) {
+    return await this.patientsService.create(createPatientDto);
   }
 
   @Get()
-  findAll(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.patientsService.findAll({
-      skip: skip ? parseInt(skip) : 0,
-      take: take ? parseInt(take) : 10,
-      search,
-    });
+  async findAll(@Query() searchParams: SearchPatientsDto) {
+    return await this.patientsService.findAll(searchParams);
   }
 
-  @Get('search')
-  search(@Query('q') query: string) {
-    return this.patientsService.search(query);
+  @Get('search/phone/:phone')
+  async searchByPhone(@Param('phone') phone: string) {
+    return await this.patientsService.searchByPhone(phone);
+  }
+
+  @Get('search/initials/:initials')
+  async searchByInitials(@Param('initials') initials: string) {
+    return await this.patientsService.searchByInitials(initials);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.patientsService.findOne(id);
-  }
-
-  @Get('document/:documentNumber')
-  findByDocument(@Param('documentNumber') documentNumber: string) {
-    return this.patientsService.findByDocument(documentNumber);
-  }
-
-  @Put(':id')
-  update(@Param('id') id: string, @Body() updatePatientDto: UpdatePatientDto) {
-    return this.patientsService.update(id, updatePatientDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.patientsService.remove(id);
-  }
-
-  @Get(':id/appointments')
-  getAppointments(@Param('id') id: string) {
-    return this.patientsService.getPatientAppointments(id);
+  async findOne(@Param('id') id: string) {
+    return await this.patientsService.findOne(id);
   }
 
   @Get(':id/medical-history')
-  getMedicalHistory(@Param('id') id: string) {
-    return this.patientsService.getPatientMedicalHistory(id);
+  async getMedicalHistory(@Param('id') id: string) {
+    return await this.patientsService.getMedicalHistory(id);
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updatePatientDto: UpdatePatientDto
+  ) {
+    return await this.patientsService.update(id, updatePatientDto);
+  }
+
+  @Patch(':id/medical-history')
+  async updateMedicalHistory(
+    @Param('id') id: string,
+    @Body() data: any
+  ) {
+    return await this.patientsService.updateMedicalHistory(id, data);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    return await this.patientsService.remove(id);
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -46,31 +46,28 @@ import {
   WhatsApp as WhatsAppIcon,
   Clear as ClearIcon,
   PersonSearch as PersonSearchIcon,
-  History as HistoryIcon
+  FilterList as FilterIcon
 } from '@mui/icons-material';
 import { format, parseISO, differenceInYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import api from '../services/api';
 import PatientFormModal from '../components/patients/PatientFormModal';
-import HistoryPanel from '../components/history/HistoryPanel';
-import HistoryService from '../services/historyService';
 
 interface Patient {
   id: string;
-  patientCode?: string;
+  patientCode: string;
   firstName: string;
   lastName: string;
-  documentNumber?: string; // Para compatibilidad con tu esquema actual
-  dni?: string;
+  dni: string;
   email: string;
   phone: string;
-  birthDate?: string;
-  gender?: string;
-  address?: string;
-  city?: string;
-  acceptsWhatsapp?: boolean;
-  acceptsMarketing?: boolean;
-  createdAt?: string;
+  birthDate: string;
+  gender: string;
+  address: string;
+  city: string;
+  acceptsWhatsapp: boolean;
+  acceptsMarketing: boolean;
+  createdAt: string;
   appointments?: any[];
   _count?: {
     appointments: number;
@@ -78,10 +75,13 @@ interface Patient {
   };
 }
 
-export default function PatientsPage() {
+const PatientsPage: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [search, setSearch] = useState('');
+  const [searchMode, setSearchMode] = useState<'general' | 'phone' | 'initials'>('general');
+  const [phoneSearch, setPhoneSearch] = useState('');
+  const [initialsSearch, setInitialsSearch] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalPatients, setTotalPatients] = useState(0);
@@ -91,76 +91,70 @@ export default function PatientsPage() {
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
-  const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info'
   });
 
-  const historyService = HistoryService.getInstance();
+  const fetchPatients = useCallback(async () => {
+    setLoading(true);
+    try {
+      let params: any = {
+        page: page + 1,
+        limit: rowsPerPage
+      };
 
-  const showSnackbar = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
-    setSnackbar({ open: true, message, severity });
-  };
+      if (searchMode === 'general' && search) {
+        params.search = search;
+      } else if (searchMode === 'phone' && phoneSearch) {
+        params.phone = phoneSearch;
+      } else if (searchMode === 'initials' && initialsSearch) {
+        params.initials = initialsSearch;
+      }
 
-  const loadPatients = useCallback(async () => {
-  setLoading(true);
-  try {
-    let params: any = {
-      page: page + 1,
-      limit: rowsPerPage
-    };
-
-    // Búsqueda universal - el backend buscará en todos los campos
-    if (searchTerm) {
-      params.search = searchTerm;
-    }
-
-    const response = await api.get('/patients', { params });
-    
-    if (response.data.data) {
+      const response = await api.get('/patients', { params });
       setPatients(response.data.data);
-      setTotalPatients(response.data.pagination?.total || response.data.data.length);
-    } else {
-      setPatients(response.data);
-      setTotalPatients(response.data.length);
+      setTotalPatients(response.data.pagination.total);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+      showSnackbar('Error al cargar pacientes', 'error');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error loading patients:', error);
-    showSnackbar('Error al cargar pacientes', 'error');
-  } finally {
-    setLoading(false);
-  }
-}, [page, rowsPerPage, searchTerm]);
-
+  }, [page, rowsPerPage, search, searchMode, phoneSearch, initialsSearch]);
 
   useEffect(() => {
-    loadPatients();
-  }, [loadPatients]);
-
-  const handleSearch = () => {
-    setPage(0);
-    loadPatients();
-  };
+    fetchPatients();
+  }, [fetchPatients]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  setSearchTerm(event.target.value);
-  setPage(0); // Resetear a primera página al buscar
-};
+    const { value } = event.target;
+    if (searchMode === 'general') {
+      setSearch(value);
+    } else if (searchMode === 'phone') {
+      setPhoneSearch(value);
+    } else if (searchMode === 'initials') {
+      setInitialsSearch(value.toUpperCase());
+    }
+    setPage(0);
+  };
 
   const handleSearchModeChange = (event: React.MouseEvent<HTMLElement>, newMode: string | null) => {
     if (newMode !== null) {
       setSearchMode(newMode as 'general' | 'phone' | 'initials');
-      setSearchTerm('');
+      setSearch('');
+      setPhoneSearch('');
+      setInitialsSearch('');
       setPage(0);
     }
   };
 
   const clearSearch = () => {
-    setSearchTerm('');
+    setSearch('');
+    setPhoneSearch('');
+    setInitialsSearch('');
     setPage(0);
-    loadPatients();
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -188,33 +182,15 @@ export default function PatientsPage() {
     setFormModalOpen(true);
   };
 
-  const handleEditPatient = async (patient?: Patient) => {
-  const patientToEdit = patient || selectedPatient;
-  if (patientToEdit) {
-    try {
-      setLoading(true);
-      // Obtener los datos completos del paciente desde el backend
-      const response = await api.get(`/patients/${patientToEdit.id}`);
-      
-      // Guardar los datos completos en el estado
-      setSelectedPatient(response.data);
-      
-      // Abrir el modal en modo edición
+  const handleEditPatient = (patient?: Patient) => {
+    const patientToEdit = patient || selectedPatient;
+    if (patientToEdit) {
       setFormMode('edit');
+      setSelectedPatient(patientToEdit);
       setFormModalOpen(true);
-      
-      // Cerrar el menú si está abierto
-      if (anchorEl) {
-        handleMenuClose();
-      }
-    } catch (error) {
-      console.error('Error loading patient details:', error);
-      showSnackbar('Error al cargar los datos del paciente', 'error');
-    } finally {
-      setLoading(false);
+      handleMenuClose();
     }
-  }
-};
+  };
 
   const handleDeleteClick = (patient?: Patient) => {
     const patientToDelete = patient || selectedPatient;
@@ -226,81 +202,38 @@ export default function PatientsPage() {
   };
 
   const handleDeleteConfirm = async () => {
-  if (!patientToDelete) return;
+    if (!patientToDelete) return;
 
-  try {
-    // Primero obtener todos los datos del paciente para poder restaurarlo
-    const fullPatientData = await api.get(`/patients/${patientToDelete.id}`);
-    
-    await api.delete(`/patients/${patientToDelete.id}`);
-    
-    // Registrar en el historial con todos los datos
-    historyService.addAction({
-      type: 'DELETE',
-      entity: 'PATIENT',
-      entityId: patientToDelete.id,
-      description: `Eliminado: ${patientToDelete.firstName} ${patientToDelete.lastName}`,
-      previousData: fullPatientData.data, // Guardar datos completos
-      userId: 'current-user',
-      undoable: true
-    });
-    
-    showSnackbar('Paciente eliminado correctamente (puede deshacer esta acción)', 'success');
-    loadPatients();
-  } catch (error: any) {
-    const message = error.response?.data?.message || 'Error al eliminar paciente';
-    showSnackbar(message, 'error');
-  } finally {
-    setDeleteDialogOpen(false);
-    setPatientToDelete(null);
-  }
-};
+    try {
+      await api.delete(`/patients/${patientToDelete.id}`);
+      showSnackbar('Paciente eliminado correctamente', 'success');
+      fetchPatients();
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Error al eliminar paciente';
+      showSnackbar(message, 'error');
+    } finally {
+      setDeleteDialogOpen(false);
+      setPatientToDelete(null);
+    }
+  };
 
-const handleFormSave = async (savedPatient?: any) => {
-  const message = formMode === 'create' 
-    ? 'Paciente creado correctamente' 
-    : 'Paciente actualizado correctamente';
-  
-  // Registrar en el historial
-  if (formMode === 'create' && savedPatient) {
-    historyService.addAction({
-      type: 'CREATE',
-      entity: 'PATIENT',
-      entityId: savedPatient.id,
-      description: `Nuevo paciente: ${savedPatient.firstName} ${savedPatient.lastName}`,
-      newData: savedPatient,
-      userId: 'current-user',
-      undoable: true
-    });
-  } else if (formMode === 'edit' && selectedPatient && savedPatient) {
-    historyService.addAction({
-      type: 'UPDATE',
-      entity: 'PATIENT',
-      entityId: selectedPatient.id,
-      description: `Actualizado: ${savedPatient.firstName} ${savedPatient.lastName}`,
-      previousData: selectedPatient, // Datos anteriores (completos)
-      newData: savedPatient, // Nuevos datos
-      userId: 'current-user',
-      undoable: true
-    });
-  }
-  
-  showSnackbar(message + ' (puede deshacer esta acción)', 'success');
-  
-  // Limpiar el estado y recargar
-  setSelectedPatient(null);
-  setFormModalOpen(false);
-  loadPatients();
+  const handleFormSave = () => {
+    const message = formMode === 'create' 
+      ? 'Paciente creado correctamente' 
+      : 'Paciente actualizado correctamente';
+    showSnackbar(message, 'success');
+    fetchPatients();
+  };
 
-};
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
-  const calculateAge = (birthDate?: string) => {
-    if (!birthDate) return '-';
+  const calculateAge = (birthDate: string) => {
     return differenceInYears(new Date(), parseISO(birthDate));
   };
 
   const formatPhone = (phone: string) => {
-    if (!phone) return '-';
     const cleaned = phone.replace(/\D/g, '');
     if (cleaned.length === 9) {
       return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
@@ -315,36 +248,38 @@ const handleFormSave = async (savedPatient?: any) => {
       case 'initials':
         return 'Buscar por iniciales (ej: JG)...';
       default:
-        return 'Buscar por nombre, DNI o teléfono...';
+        return 'Buscar por nombre, apellido, DNI, email...';
+    }
+  };
+
+  const getCurrentSearchValue = () => {
+    switch (searchMode) {
+      case 'phone':
+        return phoneSearch;
+      case 'initials':
+        return initialsSearch;
+      default:
+        return search;
     }
   };
 
   return (
-    <Box>
-      {/* Encabezado */}
+    <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4" component="h1">
           Gestión de Pacientes
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<HistoryIcon />}
-            onClick={() => setHistoryPanelOpen(true)}
-          >
-            Historial
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleCreatePatient}
-          >
-            Nuevo Paciente
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleCreatePatient}
+          size="large"
+        >
+          Nuevo Paciente
+        </Button>
       </Box>
 
-      {/* Estadísticas */}
+      {/* Estadísticas rápidas */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
@@ -363,46 +298,50 @@ const handleFormSave = async (savedPatient?: any) => {
       {/* Barra de búsqueda */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <ToggleButtonGroup
+            value={searchMode}
+            exclusive
+            onChange={handleSearchModeChange}
+            size="small"
+          >
+            <ToggleButton value="general">
+              <Tooltip title="Búsqueda general">
+                <SearchIcon />
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="phone">
+              <Tooltip title="Buscar por teléfono">
+                <PhoneIcon />
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="initials">
+              <Tooltip title="Buscar por iniciales">
+                <PersonSearchIcon />
+              </Tooltip>
+            </ToggleButton>
+          </ToggleButtonGroup>
+
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Buscar por nombre, apellidos, DNI, teléfono o email..."
-            value={searchTerm}
+            placeholder={getSearchPlaceholder()}
+            value={getCurrentSearchValue()}
             onChange={handleSearchChange}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                loadPatients();
-              }
-            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <SearchIcon />
                 </InputAdornment>
               ),
-              endAdornment: searchTerm && (
+              endAdornment: getCurrentSearchValue() && (
                 <InputAdornment position="end">
-                  <IconButton 
-                    onClick={() => {
-                      setSearchTerm('');
-                      setPage(0);
-                    }} 
-                    size="small"
-                  >
+                  <IconButton onClick={clearSearch} size="small">
                     <ClearIcon />
                   </IconButton>
                 </InputAdornment>
               )
             }}
           />
-          
-          <Button
-            variant="contained"
-            onClick={loadPatients}
-            startIcon={<SearchIcon />}
-          >
-            Buscar
-          </Button>
         </Box>
       </Paper>
 
@@ -412,11 +351,10 @@ const handleFormSave = async (savedPatient?: any) => {
           <TableHead>
             <TableRow>
               <TableCell>Código</TableCell>
-              <TableCell>Nombre</TableCell>
+              <TableCell>Nombre Completo</TableCell>
               <TableCell>DNI</TableCell>
               <TableCell>Teléfono</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Ciudad</TableCell>
               <TableCell align="center">Edad</TableCell>
               <TableCell align="center">Citas</TableCell>
               <TableCell align="center">WhatsApp</TableCell>
@@ -427,27 +365,25 @@ const handleFormSave = async (savedPatient?: any) => {
             {patients.map((patient) => (
               <TableRow key={patient.id} hover>
                 <TableCell>
-                  {patient.patientCode && (
-                    <Chip 
-                      label={patient.patientCode} 
-                      size="small" 
-                      variant="outlined"
-                    />
-                  )}
+                  <Chip 
+                    label={patient.patientCode} 
+                    size="small" 
+                    variant="outlined"
+                  />
                 </TableCell>
                 <TableCell>
                   <Box>
                     <Typography variant="body1">
                       {patient.firstName} {patient.lastName}
                     </Typography>
-                    {patient.gender && (
-                      <Typography variant="caption" color="textSecondary">
-                        {patient.gender === 'FEMENINO' ? '♀' : patient.gender === 'MASCULINO' ? '♂' : '⚥'}
-                      </Typography>
-                    )}
+                    <Typography variant="caption" color="textSecondary">
+                      {patient.gender === 'FEMENINO' ? '♀' : patient.gender === 'MASCULINO' ? '♂' : '⚥'}
+                      {' • '}
+                      {patient.city || 'Sin ciudad'}
+                    </Typography>
                   </Box>
                 </TableCell>
-                <TableCell>{patient.dni || patient.documentNumber || '-'}</TableCell>
+                <TableCell>{patient.dni}</TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <PhoneIcon fontSize="small" color="action" />
@@ -458,13 +394,12 @@ const handleFormSave = async (savedPatient?: any) => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <EmailIcon fontSize="small" color="action" />
                     <Typography variant="body2" noWrap sx={{ maxWidth: 150 }}>
-                      {patient.email || '-'}
+                      {patient.email}
                     </Typography>
                   </Box>
                 </TableCell>
-                <TableCell>{patient.city || '-'}</TableCell>
                 <TableCell align="center">
-                  {patient.birthDate ? `${calculateAge(patient.birthDate)} años` : '-'}
+                  {calculateAge(patient.birthDate)} años
                 </TableCell>
                 <TableCell align="center">
                   <Badge 
@@ -475,28 +410,13 @@ const handleFormSave = async (savedPatient?: any) => {
                   </Badge>
                 </TableCell>
                 <TableCell align="center">
-                  {patient.acceptsWhatsapp !== undefined ? (
-                    patient.acceptsWhatsapp ? (
-                      <WhatsAppIcon color="success" fontSize="small" />
-                    ) : (
-                      <WhatsAppIcon color="disabled" fontSize="small" />
-                    )
-                  ) : '-'}
+                  {patient.acceptsWhatsapp ? (
+                    <WhatsAppIcon color="success" fontSize="small" />
+                  ) : (
+                    <WhatsAppIcon color="disabled" fontSize="small" />
+                  )}
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEditPatient(patient)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    color="error"
-                    onClick={() => handleDeleteClick(patient)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
                   <IconButton
                     size="small"
                     onClick={(e) => handleMenuClick(e, patient)}
@@ -508,7 +428,7 @@ const handleFormSave = async (savedPatient?: any) => {
             ))}
             {patients.length === 0 && !loading && (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 5 }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 5 }}>
                   <Typography color="textSecondary">
                     No se encontraron pacientes
                   </Typography>
@@ -539,24 +459,15 @@ const handleFormSave = async (savedPatient?: any) => {
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
           Editar
         </MenuItem>
-        <MenuItem onClick={() => {
-          console.log('Ver historia clínica');
-          handleMenuClose();
-        }}>
+        <MenuItem onClick={() => console.log('Ver historia')}>
           <MedicalIcon fontSize="small" sx={{ mr: 1 }} />
           Historia Clínica
         </MenuItem>
-        <MenuItem onClick={() => {
-          console.log('Ver citas');
-          handleMenuClose();
-        }}>
+        <MenuItem onClick={() => console.log('Ver citas')}>
           <CalendarIcon fontSize="small" sx={{ mr: 1 }} />
           Ver Citas
         </MenuItem>
-        <MenuItem onClick={() => {
-          console.log('Ver facturas');
-          handleMenuClose();
-        }}>
+        <MenuItem onClick={() => console.log('Ver facturas')}>
           <ReceiptIcon fontSize="small" sx={{ mr: 1 }} />
           Facturas
         </MenuItem>
@@ -569,20 +480,10 @@ const handleFormSave = async (savedPatient?: any) => {
       {/* Modal de formulario */}
       <PatientFormModal
         open={formModalOpen}
-        onClose={() => {
-          setFormModalOpen(false);
-          setSelectedPatient(null); // Limpiar al cerrar
-        }}
+        onClose={() => setFormModalOpen(false)}
         onSave={handleFormSave}
-        patient={selectedPatient} // Pasar los datos del paciente seleccionado
+        patient={selectedPatient}
         mode={formMode}
-      />
-
-      {/* Panel de historial */}
-      <HistoryPanel
-        open={historyPanelOpen}
-        onClose={() => setHistoryPanelOpen(false)}
-        onActionExecuted={loadPatients}
       />
 
       {/* Diálogo de confirmación de eliminación */}
@@ -633,4 +534,6 @@ const handleFormSave = async (savedPatient?: any) => {
       </Snackbar>
     </Box>
   );
-}
+};
+
+export default PatientsPage;

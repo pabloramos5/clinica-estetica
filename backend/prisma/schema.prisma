@@ -94,9 +94,12 @@ model User {
 // Basado en tabla Clientes
 model Patient {
     id         String @id @default(uuid())
-    codCliente Int?   @unique @map("cod_cliente") // Para mantener referencia con sistema antiguo
+    codCliente Int?   @unique @map("cod_cliente")
 
-    // Datos personales
+    // Añadir este campo nuevo
+    patientCode String? @unique @map("patient_code")
+
+    // Datos personales (ya existentes)
     firstName      String       @map("first_name")
     lastName       String       @map("last_name")
     alias          String?
@@ -106,36 +109,47 @@ model Patient {
     gender         Gender?
     profession     String?
 
-    // Contacto
+    // Contacto (actualizar)
     phone            String
     alternativePhone String? @map("alternative_phone")
     mobile           String?
     email            String?
     fax              String?
 
-    // Dirección
+    // Dirección (ya existente)
     address    String?
     city       String?
     postalCode String? @map("postal_code")
     province   String?
     country    String  @default("España")
 
-    // Datos bancarios
+    // Datos bancarios (ya existente)
     bankName    String? @map("bank_name")
     bankAccount String? @map("bank_account")
 
-    // Marketing
-    wantsSMS   Boolean @default(false) @map("wants_sms")
-    wantsEmail Boolean @default(true) @map("wants_email")
+    // Marketing (actualizar nombres)
+    wantsSMS         Boolean @default(false) @map("wants_sms")
+    wantsEmail       Boolean @default(true) @map("wants_email")
+    acceptsMarketing Boolean @default(true) @map("accepts_marketing") // NUEVO
+    acceptsWhatsapp  Boolean @default(true) @map("accepts_whatsapp") // NUEVO
 
-    // Observaciones
-    observations String? @db.Text
+    // Observaciones y campos médicos (NUEVOS)
+    observations      String? @db.Text
+    allergies         String? @map("allergies") @db.Text // NUEVO
+    medications       String? @map("medications") @db.Text // NUEVO
+    medicalConditions String? @map("medical_conditions") @db.Text // NUEVO
+    occupation        String? @map("occupation") // NUEVO
+    referredBy        String? @map("referred_by") // NUEVO
 
-    // GDPR
+    // GDPR (ya existente)
     dataConsent      Boolean   @default(false) @map("data_consent")
     imageConsent     Boolean   @default(false) @map("image_consent")
     marketingConsent Boolean   @default(false) @map("marketing_consent")
     consentDate      DateTime? @map("consent_date")
+
+    // Control campos (NUEVOS)
+    isActive  Boolean   @default(true) @map("is_active")
+    deletedAt DateTime? @map("deleted_at")
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
@@ -150,7 +164,9 @@ model Patient {
     @@index([firstName])
     @@index([lastName])
     @@index([codCliente])
-    @@map("patients")
+    @@index([patientCode]) // NUEVO índice
+    @@index([phone]) // NUEVO índice
+    @@map("patients") // MUY IMPORTANTE: mantener este mapping
 }
 
 // Basado en tabla Medicos
