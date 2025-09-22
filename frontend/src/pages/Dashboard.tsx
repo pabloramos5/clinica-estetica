@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Box, 
   AppBar, 
@@ -10,39 +11,43 @@ import {
   Avatar,
   Menu,
   MenuItem
-} from '@mui/material'
+} from '@mui/material';
 import {
   Notifications as NotificationsIcon,
   AccountCircle,
   Undo as UndoIcon
-} from '@mui/icons-material'
-import Sidebar from '../components/layout/Sidebar'
-import DashboardHome from '../components/dashboard/DashboardHome'
-import PatientsPage from '../pages/PatientsPage'
-import AppointmentsPage from '../pages/AppointmentsPage'
-import api from '../services/api'
+} from '@mui/icons-material';
+import Sidebar from '../components/layout/Sidebar';
+import DashboardHome from '../components/dashboard/DashboardHome';
+import PatientsPage from './PatientsPage';
+import AppointmentsPage from './AppointmentsPage';
+import api from '../services/api';
 
 interface DashboardProps {
-  user: any
-  onLogout: () => void
+  user: any;
+  onLogout: () => void;
 }
 
-const drawerWidth = 240
+const drawerWidth = 240;
 
 export default function Dashboard({ user, onLogout }: DashboardProps) {
-  const [currentPage, setCurrentPage] = useState('dashboard')
-  const [notifications, setNotifications] = useState(0)
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [notifications, setNotifications] = useState(0);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [stats, setStats] = useState({
     todayAppointments: 0,
     totalPatients: 0,
     pendingBills: 0
-  })
+  });
+
+  // Obtener la página actual desde la URL
+  const currentPage = location.pathname.replace('/', '') || 'dashboard';
 
   useEffect(() => {
-    loadStats()
-    checkNotifications()
-  }, [])
+    loadStats();
+    checkNotifications();
+  }, []);
 
   const loadStats = async () => {
     try {
@@ -51,54 +56,76 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         todayAppointments: 5,
         totalPatients: 150,
         pendingBills: 8
-      })
+      });
     } catch (error) {
-      console.error('Error loading stats:', error)
+      console.error('Error loading stats:', error);
     }
-  }
+  };
 
   const checkNotifications = async () => {
     // Verificar notificaciones pendientes
-    setNotifications(3)
-  }
+    setNotifications(3);
+  };
 
   const handleProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget)
-  }
+    setAnchorEl(event.currentTarget);
+  };
 
   const handleCloseMenu = () => {
-    setAnchorEl(null)
-  }
+    setAnchorEl(null);
+  };
 
   const handleUndo = () => {
     // Implementar función de deshacer
-    console.log('Deshacer última acción')
-  }
+    console.log('Deshacer última acción');
+  };
 
-  const renderPage = () => {
-    switch(currentPage) {
-      case 'dashboard':
-        return <DashboardHome stats={stats} />
-      case 'patients':
-        return <PatientsPage />
-      case 'appointments':
-        return <AppointmentsPage />
-      case 'doctors':
-        return <div>Gestión de Médicos - Por implementar</div>
-      case 'treatments':
-        return <div>Gestión de Tratamientos - Por implementar</div>
-      case 'rooms':
-        return <div>Gestión de Salas - Por implementar</div>
-      case 'billing':
-        return <div>Facturación - Por implementar</div>
-      case 'statistics':
-        return <div>Estadísticas - Por implementar</div>
-      case 'settings':
-        return <div>Configuración - Por implementar</div>
-      default:
-        return <DashboardHome stats={stats} />
-    }
-  }
+  const handleNavigate = (page: string) => {
+    navigate(`/${page}`);
+  };
+
+  // Componentes placeholder para páginas no implementadas
+  const DoctorsPage = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>Gestión de Médicos</Typography>
+      <Typography color="textSecondary">Por implementar...</Typography>
+    </Box>
+  );
+
+  const TreatmentsPage = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>Gestión de Tratamientos</Typography>
+      <Typography color="textSecondary">Por implementar...</Typography>
+    </Box>
+  );
+
+  const RoomsPage = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>Gestión de Salas</Typography>
+      <Typography color="textSecondary">Por implementar...</Typography>
+    </Box>
+  );
+
+  const BillingPage = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>Facturación</Typography>
+      <Typography color="textSecondary">Por implementar...</Typography>
+    </Box>
+  );
+
+  const StatisticsPage = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>Estadísticas</Typography>
+      <Typography color="textSecondary">Por implementar...</Typography>
+    </Box>
+  );
+
+  const SettingsPage = () => (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>Configuración</Typography>
+      <Typography color="textSecondary">Por implementar...</Typography>
+    </Box>
+  );
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -111,7 +138,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
       >
         <Toolbar>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {currentPage.charAt(0).toUpperCase() + currentPage.slice(1)}
+            {currentPage.charAt(0).toUpperCase() + currentPage.slice(1).replace('-', ' ')}
           </Typography>
           
           <IconButton
@@ -155,7 +182,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         </Toolbar>
       </AppBar>
       
-      <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+      <Sidebar currentPage={currentPage} onNavigate={handleNavigate} />
       
       <Box
         component="main"
@@ -167,8 +194,32 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
           minHeight: 'calc(100vh - 64px)',
         }}
       >
-        {renderPage()}
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardHome stats={stats} />} />
+          <Route path="/patients" element={<PatientsPage />} />
+          <Route path="/appointments" element={<AppointmentsPage />} />
+          <Route path="/doctors" element={<DoctorsPage />} />
+          <Route path="/treatments" element={<TreatmentsPage />} />
+          <Route path="/rooms" element={<RoomsPage />} />
+          <Route path="/billing" element={<BillingPage />} />
+          <Route path="/statistics" element={<StatisticsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route 
+            path="*" 
+            element={
+              <Box sx={{ p: 3, textAlign: 'center' }}>
+                <Typography variant="h4" gutterBottom>
+                  Página no encontrada
+                </Typography>
+                <Typography color="textSecondary">
+                  La página que buscas no existe.
+                </Typography>
+              </Box>
+            } 
+          />
+        </Routes>
       </Box>
     </Box>
-  )
+  );
 }

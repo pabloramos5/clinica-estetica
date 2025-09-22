@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Drawer, 
   List, 
@@ -9,7 +10,7 @@ import {
   Toolbar,
   Box,
   Typography
-} from '@mui/material'
+} from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
@@ -21,16 +22,17 @@ import {
   Settings as SettingsIcon,
   LocalHospital as HospitalIcon,
   Groups as GroupsIcon
-} from '@mui/icons-material'
+} from '@mui/icons-material';
 
-const drawerWidth = 240
+const drawerWidth = 240;
 
-interface SidebarProps {
-  currentPage: string
-  onNavigate: (page: string) => void
-}
+export default function Sidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Obtener la página actual desde la URL
+  const currentPage = location.pathname.replace('/', '') || 'dashboard';
 
-export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
     { id: 'appointments', label: 'Citas', icon: <CalendarIcon /> },
@@ -40,7 +42,11 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
     { id: 'rooms', label: 'Salas', icon: <RoomIcon /> },
     { id: 'billing', label: 'Facturación', icon: <ReceiptIcon /> },
     { id: 'statistics', label: 'Estadísticas', icon: <AssessmentIcon /> },
-  ]
+  ];
+
+  const handleNavigate = (page: string) => {
+    navigate(`/${page}`);
+  };
 
   return (
     <Drawer
@@ -50,6 +56,8 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
+          position: 'fixed',
+          height: '100vh',
         },
       }}
       variant="permanent"
@@ -74,7 +82,18 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           <ListItem key={item.id} disablePadding>
             <ListItemButton
               selected={currentPage === item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => handleNavigate(item.id)}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'primary.light',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: 'action.hover',
+                },
+              }}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.label} />
@@ -85,7 +104,10 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       <Divider />
       <List sx={{ marginTop: 'auto' }}>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => onNavigate('settings')}>
+          <ListItemButton 
+            onClick={() => handleNavigate('settings')}
+            selected={currentPage === 'settings'}
+          >
             <ListItemIcon>
               <SettingsIcon />
             </ListItemIcon>
@@ -94,5 +116,5 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         </ListItem>
       </List>
     </Drawer>
-  )
+  );
 }

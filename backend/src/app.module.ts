@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { PatientsModule } from './modules/patients/patients.module';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
 
@@ -18,6 +19,7 @@ import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
     PrismaModule,
     AuthModule,
     PatientsModule,
+    AppointmentsModule,
     WhatsAppModule,
   ],
   controllers: [AppController],
