@@ -1,4 +1,3 @@
-// frontend/src/App.tsx
 import { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
@@ -41,12 +40,28 @@ function App() {
     }
   };
 
-  const handleLogin = (userData: any) => {
-    setIsAuthenticated(true);
-    setUser(userData);
-    localStorage.setItem('token', userData.token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
-  };
+const handleLogin = (userData: any) => {
+  console.log('=== DEBUG LOGIN ===');
+  console.log('userData completo:', userData);
+  console.log('accessToken extraído:', userData.accessToken);
+  
+  const token = userData.accessToken;
+  
+  if (!token) {
+    console.error('ERROR: No hay accessToken');
+    return;
+  }
+  
+  setIsAuthenticated(true);
+  setUser(userData.user);
+  localStorage.setItem('token', token);
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  
+  // Verificar que se guardó
+  console.log('Token guardado en localStorage:', localStorage.getItem('token'));
+  console.log('Headers configurados:', api.defaults.headers.common);
+  console.log('=== FIN DEBUG LOGIN ===');
+};
 
   const handleLogout = () => {
     setIsAuthenticated(false);

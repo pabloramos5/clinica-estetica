@@ -25,15 +25,18 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setError('')
     setLoading(true)
 
-    try {
-      const response = await api.post('/auth/login', { email, password })
-      const { accessToken, user } = response.data
-      
-      localStorage.setItem('token', accessToken)
-      onLogin(user)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al iniciar sesión')
-    } finally {
+  try {
+    const response = await api.post('/auth/login', { email, password })
+    const { accessToken, user } = response.data
+  
+    console.log('Respuesta completa del login:', response.data);
+    console.log('Propiedades disponibles:', Object.keys(response.data));
+
+    localStorage.setItem('token', accessToken)
+    onLogin(response.data) // <- Cambiar aquí: pasar response.data completo
+  } catch (err: any) {
+    setError(err.response?.data?.message || 'Error al iniciar sesión')
+  } finally {
       setLoading(false)
     }
   }
