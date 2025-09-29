@@ -17,15 +17,6 @@ export class AppController {
     ];
   }
 
-  @Get('rooms')
-  getRooms() {
-    return [
-      { id: '1', name: 'Sala 1', capacity: 1 },
-      { id: '2', name: 'Sala 2', capacity: 1 },
-      { id: '3', name: 'Sala Láser', capacity: 2 },
-      { id: '4', name: 'Quirófano', capacity: 3 }
-    ];
-  }
 
   @Get('treatments')
   getTreatments() {
