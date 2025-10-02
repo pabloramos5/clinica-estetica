@@ -17,16 +17,4 @@ export class AppController {
     ];
   }
 
-
-  @Get('treatments')
-  getTreatments() {
-    return [
-      { id: '1', name: 'Botox', duration: 30, price: 300 },
-      { id: '2', name: 'Ácido Hialurónico', duration: 45, price: 400 },
-      { id: '3', name: 'Peeling Químico', duration: 60, price: 150 },
-      { id: '4', name: 'Láser CO2', duration: 90, price: 600 },
-      { id: '5', name: 'Mesoterapia Facial', duration: 45, price: 200 },
-      { id: '6', name: 'Hilos Tensores', duration: 60, price: 500 }
-    ];
-  }
 }

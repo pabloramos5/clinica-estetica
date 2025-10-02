@@ -22,6 +22,7 @@ import DashboardHome from '../components/dashboard/DashboardHome';
 import PatientsPage from './PatientsPage';
 import AppointmentsPage from './AppointmentsPage';
 import RoomsPage from './RoomsPage';
+import TreatmentsPage from './TreatmentsPage';
 import api from '../services/api';
 import DoctorsPage from './DoctorsPage';
 interface DashboardProps {
@@ -85,20 +86,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     navigate(`/${page}`);
   };
 
-  // Componentes placeholder para páginas no implementadas
-  const UsersPage = () => (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>Gestión de Médicos</Typography>
-      <Typography color="textSecondary">Por implementar...</Typography>
-    </Box>
-  );
 
-  const TreatmentsPage = () => (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>Gestión de Tratamientos</Typography>
-      <Typography color="textSecondary">Por implementar...</Typography>
-    </Box>
-  );
 
 
   const BillingPage = () => (
