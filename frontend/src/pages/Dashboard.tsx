@@ -25,6 +25,7 @@ import RoomsPage from './RoomsPage';
 import TreatmentsPage from './TreatmentsPage';
 import api from '../services/api';
 import DoctorsPage from './DoctorsPage';
+
 interface DashboardProps {
   user: any;
   onLogout: () => void;
@@ -43,7 +44,6 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     pendingBills: 0
   });
 
-  // Obtener la página actual desde la URL
   const currentPage = location.pathname.replace('/', '') || 'dashboard';
 
   useEffect(() => {
@@ -53,7 +53,6 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
   const loadStats = async () => {
     try {
-      // Aquí cargaremos las estadísticas reales del backend
       setStats({
         todayAppointments: 5,
         totalPatients: 150,
@@ -65,7 +64,6 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
   };
 
   const checkNotifications = async () => {
-    // Verificar notificaciones pendientes
     setNotifications(3);
   };
 
@@ -78,16 +76,12 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
   };
 
   const handleUndo = () => {
-    // Implementar función de deshacer
     console.log('Deshacer última acción');
   };
 
   const handleNavigate = (page: string) => {
     navigate(`/${page}`);
   };
-
-
-
 
   const BillingPage = () => (
     <Box sx={{ p: 3 }}>
@@ -172,7 +166,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         sx={{
           flexGrow: 1,
           bgcolor: 'background.default',
-          p: 3,
+          p: 0,
           marginTop: '64px',
           minHeight: 'calc(100vh - 64px)',
         }}

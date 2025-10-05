@@ -477,7 +477,6 @@ const TreatmentsPage: React.FC = () => {
   return (
     <Container maxWidth={false} sx={{ mt: 2, mb: 4, px: 2 }}>
       <Grid container spacing={3}>
-        {/* TÍTULO Y BOTÓN - COMPLETAMENTE SEPARADOS */}
         <Grid item xs={12}>
           <Box 
             display="flex" 
@@ -512,11 +511,9 @@ const TreatmentsPage: React.FC = () => {
 
         {renderStatisticsCards()}
 
-        {/* BARRA DE FILTROS - TAMAÑO FIJO, SIN EMOJIS */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3, width: '100%' }}>
             <Grid container spacing={3} alignItems="center">
-              {/* BÚSQUEDA */}
               <Grid item xs={12} md={3}>
                 <TextField
                   fullWidth
@@ -546,98 +543,82 @@ const TreatmentsPage: React.FC = () => {
                 />
               </Grid>
 
-              {/* SELECTOR DE TIPO - SIN EMOJIS Y TAMAÑO FIJO */}
               <Grid item xs={12} md={7}>
-                <Box sx={{ height: '70px', position: 'relative' }}>
-                  <FormControl fullWidth sx={{ height: '70px' }}>
-                    <InputLabel 
-                      shrink
-                      sx={{ 
-                        fontSize: '1.1rem',
-                        fontWeight: 600,
-                        backgroundColor: 'white',
-                        px: 1.5,
-                        transform: 'translate(14px, -9px) scale(0.75) !important',
-                        position: 'absolute',
-                        top: 0,
-                        zIndex: 1
-                      }}
-                    >
-                      Filtrar por Tipo de Tratamiento
-                    </InputLabel>
-                    <Select
-                      value={selectedType}
-                      onChange={(e) => setSelectedType(e.target.value)}
-                      displayEmpty
-                      sx={{
-                        height: '70px !important',
-                        '& .MuiSelect-select': {
-                          fontSize: '1.3rem !important',
-                          fontWeight: 500,
-                          display: 'flex !important',
-                          alignItems: 'center !important',
-                          minHeight: '36px !important',
-                          padding: '20px 14px !important',
-                          lineHeight: '1.5'
-                        },
-                        '& .MuiOutlinedInput-input': {
-                          padding: '20px 14px !important'
-                        },
-                        backgroundColor: selectedType ? '#e3f2fd' : 'white',
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: selectedType ? 'primary.main' : 'rgba(0, 0, 0, 0.23)',
-                          borderWidth: 2
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderWidth: 2,
-                          borderColor: 'primary.main'
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderWidth: 2
-                        }
-                      }}
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            maxHeight: 500,
-                            minWidth: 600,
-                            '& .MuiMenuItem-root': {
-                              fontSize: '1.2rem',
-                              py: 2.5,
+                <FormControl fullWidth>
+                  <InputLabel 
+                    shrink
+                    sx={{ 
+                      fontSize: '0.95rem',
+                      fontWeight: 500,
+                      backgroundColor: 'white',
+                      px: 1,
+                      transform: 'translate(14px, -9px) scale(0.75) !important'
+                    }}
+                  >
+                    Filtrar por Tipo de Tratamiento
+                  </InputLabel>
+                  <Select
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      height: '56px',
+                      width: '100%',
+                      '& .MuiSelect-select': {
+                        fontSize: '1rem',
+                        fontWeight: 400,
+                        padding: '16px 14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        minWidth: '450px'  // AÑADIDO: ancho mínimo fijo
+                      },
+                      backgroundColor: selectedType ? '#e3f2fd' : 'white',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: selectedType ? 'primary.main' : 'rgba(0, 0, 0, 0.23)'
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'primary.main'
+                      }
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 400,
+                          '& .MuiMenuItem-root': {
+                            fontSize: '1rem',
+                            py: 1.5,
+                            '&:hover': {
+                              backgroundColor: '#f5f5f5'
+                            },
+                            '&.Mui-selected': {
+                              backgroundColor: '#e3f2fd',
+                              fontWeight: 500,
                               '&:hover': {
-                                backgroundColor: '#f5f5f5'
-                              },
-                              '&.Mui-selected': {
-                                backgroundColor: '#e3f2fd',
-                                fontWeight: 600,
-                                '&:hover': {
-                                  backgroundColor: '#bbdefb'
-                                }
+                                backgroundColor: '#bbdefb'
                               }
                             }
                           }
                         }
-                      }}
-                    >
-                      <MenuItem value="">
-                        <Typography variant="body1" fontWeight="bold" fontSize="1.2rem">
-                          Todos los Tratamientos
+                      }
+                    }}
+                  >
+                    <MenuItem value="">
+                      <Typography variant="body1" fontWeight="500" fontSize="1rem">
+                        Todos los Tratamientos
+                      </Typography>
+                    </MenuItem>
+                    <Divider sx={{ my: 0.5 }} />
+                    {treatmentTypes.map(type => (
+                      <MenuItem key={type.value} value={type.value}>
+                        <Typography variant="body1" fontSize="1rem">
+                          {type.label}
                         </Typography>
                       </MenuItem>
-                      <Divider sx={{ my: 1 }} />
-                      {treatmentTypes.map(type => (
-                        <MenuItem key={type.value} value={type.value}>
-                          <Typography variant="body1" fontSize="1.2rem">
-                            {type.label}
-                          </Typography>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
 
-              {/* BOTONES DE VISTA */}
               <Grid item xs={12} md={2}>
                 <Box display="flex" justifyContent="flex-end">
                   <ToggleButtonGroup

@@ -20,33 +20,50 @@ export class UsersService {
       throw new ConflictException('El email ya está registrado');
     }
 
+    // Verificar si el username ya existe (si se proporciona)
+    const username = createUserDto.username || createUserDto.email.split('@')[0];
+    const existingUsername = await this.prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (existingUsername) {
+      throw new ConflictException('El nombre de usuario ya está registrado');
+    }
+
     // Hash de la contraseña
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    // Crear el usuario con los campos correctos de tu esquema
+    // Crear el usuario
     const user = await this.prisma.user.create({
       data: {
         email: createUserDto.email,
-        username: createUserDto.name, // Usando username en lugar de name
-        passwordHash: hashedPassword, // Usando passwordHash en lugar de password
+        username: username,
+        passwordHash: hashedPassword,
         role: createUserDto.role,
-        active: true, // Usando active en lugar de isActive
+        phone: createUserDto.phone || null,
+        specialty: createUserDto.specialization || null,
+        licenseNumber: createUserDto.licenseNumber || null,
+        active: true,
       },
     });
 
+    console.log('Usuario creado en BD:', user); // Debug
     return this.formatUserResponse(user);
   }
 
   async findAll(includeInactive = false): Promise<UserResponseDto[]> {
     const users = await this.prisma.user.findMany({
-      where: includeInactive ? {} : { active: true }, // Usando active
-      orderBy: { username: 'asc' }, // Usando username
+      where: includeInactive ? {} : { active: true },
+      orderBy: { username: 'asc' },
     });
 
+    console.log('Usuarios encontrados:', users.length); // Debug
+    console.log('Primer usuario:', users[0]); // Debug
+    
     return users.map(user => this.formatUserResponse(user));
   }
 
-  async findOne(id: string): Promise<UserResponseDto> { // id es string
+  async findOne(id: string): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -64,7 +81,7 @@ export class UsersService {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> { // id es string
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
     // Verificar que el usuario existe
     await this.findOne(id);
 
@@ -82,12 +99,30 @@ export class UsersService {
       }
     }
 
+    // Si se está actualizando el username, verificar que no exista
+    if (updateUserDto.username) {
+      const existingUsername = await this.prisma.user.findFirst({
+        where: {
+          username: updateUserDto.username,
+          NOT: { id },
+        },
+      });
+
+      if (existingUsername) {
+        throw new ConflictException('El nombre de usuario ya está registrado');
+      }
+    }
+
     // Preparar datos para actualizar
     const dataToUpdate: any = {};
     
-    if (updateUserDto.email) dataToUpdate.email = updateUserDto.email;
-    if (updateUserDto.name) dataToUpdate.username = updateUserDto.name; // username en lugar de name
-    if (updateUserDto.role) dataToUpdate.role = updateUserDto.role;
+    if (updateUserDto.email !== undefined) dataToUpdate.email = updateUserDto.email;
+    if (updateUserDto.name !== undefined) dataToUpdate.username = updateUserDto.name;
+    if (updateUserDto.username !== undefined) dataToUpdate.username = updateUserDto.username;
+    if (updateUserDto.role !== undefined) dataToUpdate.role = updateUserDto.role;
+    if (updateUserDto.phone !== undefined) dataToUpdate.phone = updateUserDto.phone || null;
+    if (updateUserDto.specialization !== undefined) dataToUpdate.specialty = updateUserDto.specialization || null;
+    if (updateUserDto.licenseNumber !== undefined) dataToUpdate.licenseNumber = updateUserDto.licenseNumber || null;
     
     // Si se incluye nueva contraseña, hashearla
     if (updateUserDto.password) {
@@ -99,10 +134,11 @@ export class UsersService {
       data: dataToUpdate,
     });
 
+    console.log('Usuario actualizado:', updatedUser); // Debug
     return this.formatUserResponse(updatedUser);
   }
 
-  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<void> { // userId es string
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -112,7 +148,7 @@ export class UsersService {
     }
 
     // Verificar contraseña actual
-    const isPasswordValid = await bcrypt.compare(changePasswordDto.currentPassword, user.passwordHash); // passwordHash
+    const isPasswordValid = await bcrypt.compare(changePasswordDto.currentPassword, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('La contraseña actual es incorrecta');
     }
@@ -121,11 +157,11 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
     await this.prisma.user.update({
       where: { id: userId },
-      data: { passwordHash: hashedPassword }, // passwordHash
+      data: { passwordHash: hashedPassword },
     });
   }
 
-  async remove(id: string): Promise<void> { // id es string
+  async remove(id: string): Promise<void> {
     // Verificar que el usuario existe
     await this.findOne(id);
 
@@ -136,7 +172,7 @@ export class UsersService {
 
     if (user.role === 'ADMIN') {
       const adminCount = await this.prisma.user.count({
-        where: { role: 'ADMIN', active: true }, // active
+        where: { role: 'ADMIN', active: true },
       });
 
       if (adminCount <= 1) {
@@ -147,11 +183,11 @@ export class UsersService {
     // Soft delete (desactivar en lugar de eliminar)
     await this.prisma.user.update({
       where: { id },
-      data: { active: false }, // active
+      data: { active: false },
     });
   }
 
-  async reactivate(id: string): Promise<UserResponseDto> { // id es string
+  async reactivate(id: string): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -162,7 +198,7 @@ export class UsersService {
 
     const updatedUser = await this.prisma.user.update({
       where: { id },
-      data: { active: true }, // active
+      data: { active: true },
     });
 
     return this.formatUserResponse(updatedUser);
@@ -171,11 +207,11 @@ export class UsersService {
   async getUserStats() {
     const [totalUsers, activeUsers, usersByRole] = await Promise.all([
       this.prisma.user.count(),
-      this.prisma.user.count({ where: { active: true } }), // active
+      this.prisma.user.count({ where: { active: true } }),
       this.prisma.user.groupBy({
         by: ['role'],
         _count: true,
-        where: { active: true }, // active
+        where: { active: true },
       }),
     ]);
 
@@ -190,16 +226,26 @@ export class UsersService {
   }
 
   private formatUserResponse(user: any): UserResponseDto {
-    // Mapear campos del esquema real a la respuesta esperada
+    // IMPORTANTE: Verificar que estamos mapeando correctamente
+    console.log('Formateando usuario:', {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      specialty: user.specialty,
+      licenseNumber: user.licenseNumber,
+    });
+
     return {
       id: user.id,
       email: user.email,
-      name: user.username, // username -> name
+      username: user.username, // Agregar username
+      name: user.username, // Mantener compatibilidad
       phone: user.phone || undefined,
       role: user.role,
-      specialization: user.specialization || undefined,
+      specialization: user.specialty || undefined, // IMPORTANTE: specialty -> specialization
       licenseNumber: user.licenseNumber || undefined,
-      isActive: user.active, // active -> isActive
+      isActive: user.active,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

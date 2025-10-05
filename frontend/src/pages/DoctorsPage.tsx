@@ -14,10 +14,6 @@ import {
   Chip,
   TextField,
   InputAdornment,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Tooltip,
   Alert,
   Snackbar,
@@ -30,9 +26,6 @@ import {
   Refresh as RefreshIcon,
   PersonAdd as PersonAddIcon,
   LocalHospital as HospitalIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  Badge as BadgeIcon,
   CheckCircle as CheckCircleIcon,
   Block as BlockIcon,
 } from '@mui/icons-material';
@@ -59,11 +52,9 @@ const DoctorsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   
-  // Diálogos
   const [openForm, setOpenForm] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   
-  // Notificaciones
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -85,8 +76,7 @@ const DoctorsPage: React.FC = () => {
   const loadDoctors = async () => {
     try {
       setLoading(true);
-      const allUsers = await userService.getAll(true); // Incluir inactivos
-      // Filtrar solo médicos (excluir administradores)
+      const allUsers = await userService.getAll(true);
       const onlyDoctors = allUsers.filter(user => user.role === 'MEDICO');
       setDoctors(onlyDoctors);
     } catch (error) {
@@ -155,8 +145,9 @@ const DoctorsPage: React.FC = () => {
   const inactiveDoctors = doctors.filter(d => !d.isActive).length;
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Box sx={{ p: 0, m: 0, width: '100%', maxWidth: '100%' }}>
+      {/* Header */}
+      <Box sx={{ px: 4, pt: 3, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <HospitalIcon sx={{ fontSize: 32, color: 'primary.main' }} />
           <Typography variant="h4" component="h1">
@@ -173,133 +164,144 @@ const DoctorsPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Barra de búsqueda */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Buscar por nombre, email, teléfono, especialidad o número de licencia..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <IconButton onClick={loadDoctors} color="primary">
-            <RefreshIcon />
-          </IconButton>
-        </Box>
-      </Paper>
+      {/* Contenido con padding lateral */}
+      <Box sx={{ px: 4, pb: 4 }}>
+        {/* Barra de búsqueda */}
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Buscar por nombre, email, teléfono, especialidad o número de licencia..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <IconButton onClick={loadDoctors} color="primary">
+              <RefreshIcon />
+            </IconButton>
+          </Box>
+        </Paper>
 
-      {/* Estadísticas rápidas */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="primary">{doctors.length}</Typography>
-            <Typography variant="body2" color="textSecondary">Total de médicos</Typography>
-          </Paper>
+        {/* Estadísticas */}
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" color="primary">{doctors.length}</Typography>
+              <Typography variant="body2" color="textSecondary">Total de médicos</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" color="success.main">{activeDoctors}</Typography>
+              <Typography variant="body2" color="textSecondary">Médicos activos</Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" color="text.secondary">{inactiveDoctors}</Typography>
+              <Typography variant="body2" color="textSecondary">Médicos inactivos</Typography>
+            </Paper>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="success.main">{activeDoctors}</Typography>
-            <Typography variant="body2" color="textSecondary">Médicos activos</Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="text.secondary">{inactiveDoctors}</Typography>
-            <Typography variant="body2" color="textSecondary">Médicos inactivos</Typography>
-          </Paper>
-        </Grid>
-      </Grid>
 
-      {/* Tabla de médicos */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: 'primary.light' }}>
-              <TableCell><strong>Nombre</strong></TableCell>
-              <TableCell><strong>Email</strong></TableCell>
-              <TableCell><strong>Teléfono</strong></TableCell>
-              <TableCell><strong>Especialidad</strong></TableCell>
-              <TableCell><strong>Nº Licencia</strong></TableCell>
-              <TableCell align="center"><strong>Estado</strong></TableCell>
-              <TableCell align="center"><strong>Acciones</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredDoctors.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Typography color="textSecondary">
-                    No se encontraron médicos
-                  </Typography>
-                </TableCell>
+        {/* Tabla */}
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: 'primary.light' }}>
+                <TableCell width="22%"><strong>Nombre</strong></TableCell>
+                <TableCell width="24%"><strong>Email</strong></TableCell>
+                <TableCell width="13%"><strong>Teléfono</strong></TableCell>
+                <TableCell width="17%"><strong>Especialidad</strong></TableCell>
+                <TableCell width="12%"><strong>Nº Licencia</strong></TableCell>
+                <TableCell align="center" width="8%"><strong>Estado</strong></TableCell>
+                <TableCell align="center" width="4%"><strong>Acciones</strong></TableCell>
               </TableRow>
-            ) : (
-              filteredDoctors.map((doctor) => (
-                <TableRow
-                  key={doctor.id}
-                  sx={{ 
-                    opacity: doctor.isActive ? 1 : 0.6,
-                    '&:hover': { backgroundColor: 'action.hover' }
-                  }}
-                >
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <HospitalIcon fontSize="small" color="primary" />
-                      <strong>{doctor.name}</strong>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{doctor.email}</TableCell>
-                  <TableCell>{doctor.phone || '-'}</TableCell>
-                  <TableCell>
-                    {doctor.specialization ? (
-                      <Chip label={doctor.specialization} size="small" variant="outlined" color="primary" />
-                    ) : '-'}
-                  </TableCell>
-                  <TableCell>{doctor.licenseNumber || '-'}</TableCell>
-                  <TableCell align="center">
-                    <Chip
-                      icon={doctor.isActive ? <CheckCircleIcon /> : <BlockIcon />}
-                      label={doctor.isActive ? 'Activo' : 'Inactivo'}
-                      color={doctor.isActive ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      <Tooltip title="Editar">
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => handleEditDoctor(doctor)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={doctor.isActive ? 'Desactivar' : 'Reactivar'}>
-                        <IconButton
-                          size="small"
-                          color={doctor.isActive ? 'error' : 'success'}
-                          onClick={() => handleToggleStatus(doctor)}
-                        >
-                          {doctor.isActive ? <DeleteIcon /> : <CheckCircleIcon />}
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+            </TableHead>
+            <TableBody>
+              {filteredDoctors.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    <Typography color="textSecondary" sx={{ py: 3 }}>
+                      No se encontraron médicos
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                filteredDoctors.map((doctor) => (
+                  <TableRow
+                    key={doctor.id}
+                    sx={{ 
+                      opacity: doctor.isActive ? 1 : 0.6,
+                      '&:hover': { backgroundColor: 'action.hover' }
+                    }}
+                  >
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <HospitalIcon fontSize="small" color="primary" />
+                        <strong>{doctor.name}</strong>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{doctor.email}</Typography>
+                    </TableCell>
+                    <TableCell>{doctor.phone || '-'}</TableCell>
+                    <TableCell>
+                      {doctor.specialization ? (
+                        <Chip 
+                          label={doctor.specialization} 
+                          size="small" 
+                          variant="outlined" 
+                          color="primary" 
+                          sx={{ maxWidth: '100%' }}
+                        />
+                      ) : '-'}
+                    </TableCell>
+                    <TableCell>{doctor.licenseNumber || '-'}</TableCell>
+                    <TableCell align="center">
+                      <Chip
+                        icon={doctor.isActive ? <CheckCircleIcon /> : <BlockIcon />}
+                        label={doctor.isActive ? 'Activo' : 'Inactivo'}
+                        color={doctor.isActive ? 'success' : 'default'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                        <Tooltip title="Editar">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleEditDoctor(doctor)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={doctor.isActive ? 'Desactivar' : 'Reactivar'}>
+                          <IconButton
+                            size="small"
+                            color={doctor.isActive ? 'error' : 'success'}
+                            onClick={() => handleToggleStatus(doctor)}
+                          >
+                            {doctor.isActive ? <DeleteIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
 
       {/* Diálogo de formulario */}
       <DoctorFormDialog
@@ -325,6 +327,7 @@ const DoctorsPage: React.FC = () => {
         open={notification.open}
         autoHideDuration={6000}
         onClose={() => setNotification({ ...notification, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert
           onClose={() => setNotification({ ...notification, open: false })}
