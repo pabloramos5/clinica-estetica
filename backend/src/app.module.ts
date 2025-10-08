@@ -11,6 +11,7 @@ import { RoomsModule } from './modules/rooms/rooms.module';
 import { TreatmentsModule } from './modules/treatments/treatments.module';
 import { PatientsModule } from './modules/patients/patients.module';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
+import { MedicalHistoryModule } from './modules/medical-history/medical-history.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
     RoomsModule,
     AuthModule,
     PatientsModule,
+    MedicalHistoryModule,
     AppointmentsModule,
     WhatsAppModule,
     TreatmentsModule,

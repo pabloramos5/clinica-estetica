@@ -139,7 +139,7 @@ export class TreatmentsService {
               select: { firstName: true, lastName: true }
             },
             doctor: {
-              select: { firstName: true, lastName: true }
+              select: { username: true, email: true }
             }
           }
         },

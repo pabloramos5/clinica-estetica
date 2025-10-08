@@ -136,8 +136,8 @@ export class AppointmentsService {
         doctor: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            username: true,
+            email: true,
             specialty: true
           }
         },

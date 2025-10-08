@@ -23,6 +23,7 @@ import PatientsPage from './PatientsPage';
 import AppointmentsPage from './AppointmentsPage';
 import RoomsPage from './RoomsPage';
 import TreatmentsPage from './TreatmentsPage';
+import MedicalHistoryPage from './MedicalHistoryPage';
 import api from '../services/api';
 import DoctorsPage from './DoctorsPage';
 
@@ -181,7 +182,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
           <Route path="/rooms" element={<RoomsPage />} />
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/statistics" element={<StatisticsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/patients/:patientId/history" element={<MedicalHistoryPage />} />
           <Route 
             path="*" 
             element={

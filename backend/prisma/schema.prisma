@@ -8,20 +8,21 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(uuid())
-  email          String    @unique
-  username       String    @unique
-  passwordHash   String    @map("password_hash")
-  role           UserRole  @default(RECEPCION)
-  active         Boolean   @default(true)
-  lastAccess     DateTime? @map("last_access")
-  failedAttempts Int       @default(0) @map("failed_attempts")
-  lockedUntil    DateTime? @map("locked_until")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-  licenseNumber  String?   @map("license_number")
-  phone          String?   @map("phone")
-  specialty      String?   @map("specialty")
+  id                   String        @id @default(uuid())
+  email                String        @unique
+  username             String        @unique
+  passwordHash         String        @map("password_hash")
+  role                 UserRole      @default(RECEPCION)
+  active               Boolean       @default(true)
+  lastAccess           DateTime?     @map("last_access")
+  failedAttempts       Int           @default(0) @map("failed_attempts")
+  lockedUntil          DateTime?     @map("locked_until")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+  licenseNumber        String?       @map("license_number")
+  phone                String?       @map("phone")
+  specialty            String?       @map("specialty")
+  appointmentsAsDoctor Appointment[] @relation("DoctorAppointments")
 
   @@map("users")
 }
@@ -83,23 +84,22 @@ model Patient {
 }
 
 model Staff {
-  id                   String               @id @default(uuid())
-  medicoCod            Int?                 @unique @map("medico_cod")
-  firstName            String               @map("first_name")
-  lastName             String               @map("last_name")
-  documentType         DocumentType         @map("document_type")
-  documentNumber       String               @unique @map("document_number")
-  licenseNumber        String?              @map("license_number")
-  specialty            String?
-  defaultTreatment     String?              @map("default_treatment")
-  phone                String
-  email                String?
-  active               Boolean              @default(true)
-  createdAt            DateTime             @default(now()) @map("created_at")
-  updatedAt            DateTime             @updatedAt @map("updated_at")
-  appointmentsAsDoctor Appointment[]        @relation("DoctorAppointments")
-  medicalHistories     MedicalHistory[]
-  treatmentEvolutions  TreatmentEvolution[]
+  id                  String               @id @default(uuid())
+  medicoCod           Int?                 @unique @map("medico_cod")
+  firstName           String               @map("first_name")
+  lastName            String               @map("last_name")
+  documentType        DocumentType         @map("document_type")
+  documentNumber      String               @unique @map("document_number")
+  licenseNumber       String?              @map("license_number")
+  specialty           String?
+  defaultTreatment    String?              @map("default_treatment")
+  phone               String
+  email               String?
+  active              Boolean              @default(true)
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  medicalHistories    MedicalHistory[]
+  treatmentEvolutions TreatmentEvolution[]
 
   @@map("staff")
 }
@@ -153,7 +153,7 @@ model Appointment {
   reminderSent     Boolean           @default(false) @map("reminder_sent")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
-  doctor           Staff             @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  doctor           User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
   patient          Patient           @relation(fields: [patientId], references: [id])
   room             Room              @relation(fields: [roomId], references: [id])
   treatment        Treatment         @relation(fields: [treatmentId], references: [id])

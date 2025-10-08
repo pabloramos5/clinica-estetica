@@ -1,0 +1,707 @@
+🗺️  PLANTILLA DE MAPEO PARA IMPORTACIÓN
+================================================================================
+
+Copia y ajusta estos mapeos en import-advanced.ts
+
+
+📋 CATEGORÍA: PACIENTES
+--------------------------------------------------------------------------------
+
+Tabla: Clientes (8576 registros)
+Columnas:
+  - CodCliente                     Integer    (required)
+    Ejemplos: 45, 47, 51
+  - CLI_COD_CONTABLE               Integer    (required)
+    Ejemplos: 0, 0, 0
+  - Nombre                         String     (required)
+    Ejemplos: HERNANDEZ MACHANCOSES ANA, BALBOA MACHANCOSES CRISTINA (PIRU), BORDES VILLAGRASA NURIA
+  - Alias                          String     (nullable)
+    Ejemplos: Ana, Cristina (PIRU), Nuria
+  - Domicilio                      String     (nullable)
+    Ejemplos: MAS CAMARENA PARCELA 25, ALVARO DE BAZAN 13-7, DON QUIJOTE 5
+  - Poblacion                      String     (required)
+    Ejemplos: BETERA, VALENCIA, BENIMAMET
+  - CodPostal                      String     (nullable)
+    Ejemplos: 46184, 46010, 46035
+  - Provincia                      String     (required)
+    Ejemplos: VALENCIA, VALENCIA, VALENCIA
+  - Pais                           String     (required)
+    Ejemplos: ESPAÑA, ESPAÑA, ESPAÑA
+  - NIF                            String     (nullable)
+    Ejemplos: 22694584R, 963312567, 
+  - Telefono1                      String     (nullable)
+    Ejemplos: , 963699471, 963903630
+  - Telefono2                      String     (nullable)
+    Ejemplos: , , 
+  - Fax                            String     (nullable)
+    Ejemplos: , , 
+  - PersonaContacto                String     (nullable)
+  - Email                          String     (nullable)
+    Ejemplos: anahernandez1965.ahm@gmail.com, , tecnococinafjgh@hotmail.com
+  - TelefonoMovil                  String     (nullable)
+    Ejemplos: 607415651, , 677248673
+  - Observaciones                  String     (nullable)
+    Ejemplos: , INFORMATICA, BIOLOGA
+  - CLI_CUENTA_CONTABLE            unknown    (nullable)
+  - CLI_SEXO                       String     (nullable)
+    Ejemplos: F, F, F
+  - CLI_CESION                     String     (nullable)
+    Ejemplos: SI, NO, NO
+  - CLI_ACEPTACION                 String     (nullable)
+    Ejemplos: SI, NO, NO
+  - DescuentoCom                   Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescuentoEsp                   Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescuentoPP                    Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FormaPago                      String     (nullable)
+    Ejemplos: CONTADO, CONTADO, CONTADO
+  - CodigoFormaPago                Integer    (required)
+    Ejemplos: 1, 1, 1
+  - Sector                         String     (nullable)
+    Ejemplos: , , 
+  - SubSector                      String     (nullable)
+    Ejemplos: , , 
+  - Representante                  String     (nullable)
+    Ejemplos: , , 
+  - ComisionRepresentante          String     (nullable)
+    Ejemplos: 0, 0, 0
+  - DiaPagoUno                     Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DiaPagoDos                     Integer    (required)
+    Ejemplos: 0, 0, 0
+  - Facturado                      String     (required)
+    Ejemplos: NO, NO, NO
+  - DiaInicialNoGiro               Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DiaFinalNoGiro                 Integer    (required)
+    Ejemplos: 0, 0, 0
+  - MesInicialNoGiro               Integer    (required)
+    Ejemplos: 0, 0, 0
+  - MesFinalNoGiro                 Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DocumentoPago                  String     (nullable)
+    Ejemplos: , , 
+  - TipoCPA                        String     (required)
+    Ejemplos: PARTICULAR, PARTICULAR, PARTICULAR
+  - OtrasObservaciones             String     (nullable)
+    Ejemplos: , , 
+  - AplicarIVANulo                 Integer    (required)
+    Ejemplos: 1, 1, 1
+  - AplicarRE                      Integer    (required)
+    Ejemplos: 0, 0, 0
+  - SubCuenta                      String     (nullable)
+    Ejemplos: , , 
+  - Web                            String     (nullable)
+    Ejemplos: , , 
+  - BancoNombre                    String     (nullable)
+    Ejemplos: , , 
+  - BancoCuenta                    String     (nullable)
+    Ejemplos: , , 
+  - Via                            String     (required)
+    Ejemplos: C/, C/, C/
+  - FechaNacimiento                Date       (nullable)
+    Ejemplos: Mon Jul 26 1965 01:00:00 GMT+0100 (Central European Summer Time), Wed May 16 1973 01:00:00 GMT+0100 (Central European Standard Time), Sun Sep 10 1967 01:00:00 GMT+0100 (Central European Summer Time)
+  - Profesion                      String     (nullable)
+    Ejemplos: , , 
+  - DeseaEnvioSMS                  String     (nullable)
+    Ejemplos: SI, SI, SI
+
+Tabla: ClientesOld (1234 registros)
+Columnas:
+  - CodCliente                     Integer    (required)
+    Ejemplos: 183, 185, 186
+  - CLI_COD_CONTABLE               Integer    (required)
+    Ejemplos: 0, 0, 0
+  - Nombre                         String     (required)
+    Ejemplos: GEA AGUILAR Antonia, MARTIN MARTINEZ Mª.Juana, PIÑEIRO ALEGRE Carmen
+  - Alias                          String     (required)
+    Ejemplos: Antonia, Mª.Juana, Carmen
+  - Domicilio                      String     (nullable)
+    Ejemplos: CERVANTES 30-2, MTRO. LOPE 55-3ª, PLAZA POZO 9-6
+  - Poblacion                      String     (required)
+    Ejemplos: BURJASOT, BURJASOT, BURJASOT
+  - CodPostal                      String     (nullable)
+    Ejemplos: 46100, 46100, 46100
+  - Provincia                      String     (required)
+    Ejemplos: VALENCIA, VALENCIA, VALENCIA
+  - Pais                           String     (required)
+    Ejemplos: ESPAÑA, ESPAÑA, ESPAÑA
+  - NIF                            String     (nullable)
+    Ejemplos: 22626101-N
+  - Telefono1                      String     (nullable)
+    Ejemplos: 963631639, 963902357, 963632797
+  - Telefono2                      String     (nullable)
+  - Fax                            unknown    (nullable)
+  - PersonaContacto                unknown    (nullable)
+  - Email                          unknown    (nullable)
+  - TelefonoMovil                  String     (nullable)
+  - Observaciones                  String     (nullable)
+    Ejemplos: AMA DE CASA
+  - CLI_CUENTA_CONTABLE            unknown    (nullable)
+  - CLI_SEXO                       String     (required)
+    Ejemplos: F, F, F
+  - CLI_CESION                     String     (required)
+    Ejemplos: NO, NO, NO
+  - CLI_ACEPTACION                 String     (required)
+    Ejemplos: NO, NO, NO
+  - DescuentoCom                   Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescuentoEsp                   Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescuentoPP                    Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FormaPago                      String     (required)
+    Ejemplos: CONTADO, CONTADO, CONTADO
+  - CodigoFormaPago                Integer    (required)
+    Ejemplos: 1, 1, 1
+  - Sector                         unknown    (nullable)
+  - SubSector                      unknown    (nullable)
+  - Representante                  unknown    (nullable)
+  - ComisionRepresentante          String     (nullable)
+  - DiaPagoUno                     Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DiaPagoDos                     Integer    (required)
+    Ejemplos: 0, 0, 0
+  - Facturado                      String     (required)
+    Ejemplos: NO, NO, NO
+  - DiaInicialNoGiro               Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DiaFinalNoGiro                 Integer    (required)
+    Ejemplos: 0, 0, 0
+  - MesInicialNoGiro               Integer    (required)
+    Ejemplos: 0, 0, 0
+  - MesFinalNoGiro                 Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DocumentoPago                  unknown    (nullable)
+  - TipoCPA                        String     (required)
+    Ejemplos: PARTICULAR, PARTICULAR, PARTICULAR
+  - OtrasObservaciones             unknown    (nullable)
+  - AplicarIVANulo                 Integer    (required)
+    Ejemplos: 1, 1, 1
+  - AplicarRE                      Integer    (required)
+    Ejemplos: 0, 0, 0
+  - SubCuenta                      unknown    (nullable)
+  - Web                            unknown    (nullable)
+  - BancoNombre                    unknown    (nullable)
+  - BancoCuenta                    unknown    (nullable)
+  - Via                            String     (required)
+    Ejemplos: C/, C/, C/
+  - FechaNacimiento                Date       (required)
+    Ejemplos: Thu Aug 25 1910 00:00:00 GMT+0000 (Central European Summer Time), Sat May 02 1959 01:00:00 GMT+0100 (Central European Summer Time), Sun Oct 16 1955 01:00:00 GMT+0100 (Central European Summer Time)
+  - Profesion                      String     (nullable)
+  - DeseaEnvioSMS                  String     (required)
+    Ejemplos: SI, SI, SI
+
+Tabla: ClientesDuplicados (0 registros)
+Columnas:
+
+📋 CATEGORÍA: TRATAMIENTOS
+--------------------------------------------------------------------------------
+
+Tabla: BotoxTratamientos (1 registros)
+Columnas:
+  - Codigo                         Integer    (required) [UNIQUE]
+    Ejemplos: 1
+  - Nombre                         String     (required) [UNIQUE]
+    Ejemplos: botox
+
+Tabla: FlebologiasTratamientos (1 registros)
+Columnas:
+  - Codigo                         Integer    (required) [UNIQUE]
+    Ejemplos: 1
+  - Nombre                         String     (required) [UNIQUE]
+    Ejemplos: flebologias
+
+Tabla: InfiltracionesTratamientos (1 registros)
+Columnas:
+  - Codigo                         Integer    (required) [UNIQUE]
+    Ejemplos: 1
+  - Nombre                         String     (required) [UNIQUE]
+    Ejemplos: infiltraciones
+
+Tabla: LasersTratamientos (6 registros)
+Columnas:
+  - Codigo                         Integer    (required) [UNIQUE]
+    Ejemplos: 1, 2, 3
+  - Nombre                         String     (required) [UNIQUE]
+    Ejemplos: Alejandrita, Neodimio Yag, Alejandrita y Neodimio Yag
+
+Tabla: OtrosTratamientos (32 registros)
+Columnas:
+  - Codigo                         Integer    (required) [UNIQUE]
+    Ejemplos: 1, 2, 3
+  - Nombre                         String     (required) [UNIQUE]
+    Ejemplos: MESOTERAPIA FACIAL, Radiofrecuencia facial, Radiofrecuencia corporal
+
+Tabla: PeelingsTratamientos (2 registros)
+Columnas:
+  - Codigo                         Integer    (required) [UNIQUE]
+    Ejemplos: 1, 2
+  - Nombre                         String     (required) [UNIQUE]
+    Ejemplos: PEELINGS, PEELING CORPORAL
+
+Tabla: rptComparativaTratamientos (137405 registros)
+Columnas:
+  - Tipo                           String     (required)
+    Ejemplos: FLEBOLOGIA, INFILTRACION, INFILTRACION
+  - Fecha                          String     (required)
+    Ejemplos: 09/01/2014, 09/01/2014, 09/01/2014
+  - Cliente                        String     (required)
+    Ejemplos: GOMEZ JIMENO MºJESUS, CALOMARDE RODRIGO LAURA, BENLLOCH MOLTO ROSA
+  - Importe                        Integer    (required)
+    Ejemplos: 60, 151, 240
+  - Facturado                      String     (required)
+    Ejemplos: SI, SI, SI
+  - Facturable                     String     (required)
+    Ejemplos: SI, SI, SI
+  - Estado                         String     (required)
+    Ejemplos: TRATAMIENTO, TRATAMIENTO, TRATAMIENTO
+  - Sesion                         String     (required)
+    Ejemplos: 09012014223318, 09012014223318, 09012014223318
+
+Tabla: Tratamientos (171 registros)
+Columnas:
+  - TratCod                        Integer    (required) [UNIQUE]
+    Ejemplos: 1, 2, 3
+  - TratNombre                     String     (required)
+    Ejemplos: ELECTROLIPOLISIS, ULTRASONIDOS + DRENAJE + PRESOTERAPIA, PEELING AC. GLICÓLICO
+  - TratDuracion                   Integer    (required)
+    Ejemplos: 90, 90, 45
+  - TratMedico                     String     (required)
+    Ejemplos: JUAN RAMOS, JUAN RAMOS, TECNICOS
+  - TratObservaciones              String     (required)
+    Ejemplos: 
+, 
+, 
+
+
+Tabla: TratamientosHoras (491 registros)
+Columnas:
+  - CodTratamiento                 Integer    (required)
+    Ejemplos: 1, 1, 1
+  - HoraInicio                     Date       (required) [UNIQUE]
+    Ejemplos: Sat Dec 30 1899 10:15:16 GMT-0014 (Central European Standard Time), Sat Dec 30 1899 11:45:16 GMT-0014 (Central European Standard Time), Sat Dec 30 1899 15:15:16 GMT-0014 (Central European Standard Time)
+  - HoraFin                        Date       (required) [UNIQUE]
+    Ejemplos: Sat Dec 30 1899 11:45:16 GMT-0014 (Central European Standard Time), Sat Dec 30 1899 13:15:16 GMT-0014 (Central European Standard Time), Sat Dec 30 1899 16:45:16 GMT-0014 (Central European Standard Time)
+
+📋 CATEGORÍA: MEDICOS
+--------------------------------------------------------------------------------
+
+Tabla: Medicos (9 registros)
+Columnas:
+  - MedicoCod                      Integer    (required) [UNIQUE]
+    Ejemplos: 1, 6, 7
+  - MedicoNombre                   String     (required) [UNIQUE]
+    Ejemplos: JUAN RAMOS BADIA (MÉDICO), MIGUEL FERNANDEZ (CIRUJANO), MARTA (AUX. SANITARIO)
+  - TratamientoDefecto             unknown    (nullable)
+
+📋 CATEGORÍA: SALAS
+--------------------------------------------------------------------------------
+
+Tabla: Salas (6 registros)
+Columnas:
+  - SalaCod                        Integer    (required) [UNIQUE]
+    Ejemplos: 1, 2, 3
+  - SalaNombre                     String     (required) [UNIQUE]
+    Ejemplos: SALA 1 DOBLE, SALA 2 DOBLE, SALA 3 EXTRACIÓN
+  - SalaCapacidad                  Integer    (required)
+    Ejemplos: 2, 2, 1
+  - SalaObservaciones              String     (required)
+    Ejemplos: , , 
+
+📋 CATEGORÍA: FACTURAS
+--------------------------------------------------------------------------------
+
+Tabla: Cobros (0 registros)
+Columnas:
+
+Tabla: DescFactura (29324 registros)
+Columnas:
+  - Contador                       Integer    (required)
+    Ejemplos: 26, 27, 28
+  - Delegacion                     Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaLinea               Integer    (required)
+    Ejemplos: 1, 1, 1
+  - DescFacturaPrecio              Decimal    (required)
+    Ejemplos: 128.4, 267.5, 60
+  - DescFacturaCantidad            Integer    (required)
+    Ejemplos: 1, 1, 1
+  - DescFacturaNombreP             String     (required)
+    Ejemplos: INFILTRACION CON MATERIAL DE RELLENO, VISTABEL MUJER(ELIMINACION ARRUGAS POR EXPRESION), VISITA MEDICA
+  - DescFacturaDescP               unknown    (nullable)
+  - DescFacturaGrupoP              String     (nullable)
+    Ejemplos: INFILTRACIONES, BOTOX, OTROS
+  - DescFacturaProveedor           String     (required)
+    Ejemplos: , , 
+  - DescFacturaCodProveedor        Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaArticulo            String     (required)
+    Ejemplos: 12, 10, 22
+  - DescFacturaDtoPor              Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaTipoIVA             Integer    (required)
+    Ejemplos: 7, 7, 0
+  - DescFacturaTipoRE              Integer    (required)
+    Ejemplos: 1, 1, 0
+  - DescFacturaAlmacen             String     (required)
+    Ejemplos: , , 
+  - DescFacturaCodAlmacen          Integer    (required)
+    Ejemplos: 1, 1, 1
+  - DescFacturaColorNombre         String     (required)
+    Ejemplos: , , 
+  - DescFacturaColorValor          Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaUnidadesNombre      String     (required)
+    Ejemplos: , , 
+  - DescFacturaUnidadesValor       Integer    (required)
+    Ejemplos: 1, 1, 1
+  - DescFacturaCompuesto           String     (required)
+    Ejemplos: NO, NO, NO
+  - DescFacturaTotalCompra         Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaObservacion         unknown    (nullable)
+  - DescFacturaRecibidos           Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaEntregados          Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaReferencia          unknown    (nullable)
+  - DescFacturaMedida              unknown    (nullable)
+  - DescFacturaPedidoDelKViene     Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaOperario            unknown    (nullable)
+  - DescFacturaIdOperario          Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaTipoLinea           unknown    (nullable)
+  - DescFacturaNumeroPlantillaEnDescPlantilla Integer    (required)
+    Ejemplos: 0, 0, 0
+  - DescFacturaFacturado           String     (required)
+    Ejemplos: NO, NO, NO
+  - DescFacturaRetencionPor        Integer    (required)
+    Ejemplos: 0, 0, 0
+
+Tabla: Factura (22690 registros)
+Columnas:
+  - Contador                       Integer    (required)
+    Ejemplos: 26, 27, 28
+  - Delegacion                     Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaNumero                  Integer    (required)
+    Ejemplos: 1, 2, 3
+  - FacturaAno                     Integer    (required)
+    Ejemplos: 2007, 2007, 2007
+  - FacturaMes                     Integer    (required)
+    Ejemplos: 11, 12, 12
+  - FacturaFecha                   Date       (required)
+    Ejemplos: Wed Nov 28 2007 01:00:00 GMT+0100 (Central European Standard Time), Wed Dec 05 2007 01:00:00 GMT+0100 (Central European Standard Time), Wed Dec 19 2007 01:00:00 GMT+0100 (Central European Standard Time)
+  - FacturaSerie                   String     (required)
+    Ejemplos: Standard, Standard, Standard
+  - FacturaValorado                String     (required)
+    Ejemplos: SI, SI, SI
+  - FacturaNombre                  String     (required)
+    Ejemplos: LAZARO  ESTEBAN MARIA C., FIDES IBAÑEZ CARMEN, PERERA GOMA MONTSERRAT
+  - FacturaApellidos               String     (required)
+    Ejemplos: LAZARO  ESTEBAN MARIA C., FIDES IBAÑEZ CARMEN, PERERA GOMA MONTSERRAT
+  - FacturaVia                     String     (required)
+    Ejemplos: C/, C/, C/
+  - FacturaDireccion               String     (required)
+    Ejemplos: ESCULTOR JOSE CAPUZ,14-3ª, , C/CONDE TRENOR Nº2-ESC 1-PTA2
+  - FacturaLocalidad               String     (required)
+    Ejemplos: VALENCIA, , VALENCIA
+  - FacturaProvincia               String     (required)
+    Ejemplos: VALENCIA, , VALENCIA
+  - FacturaCodPostal               String     (required)
+    Ejemplos: 46001, , 46003
+  - FacturaTelefono                String     (required)
+    Ejemplos: 96-3333974, , 963917300
+  - FacturaTelefono2               String     (required)
+    Ejemplos: , , 
+  - FacturaNif                     String     (required)
+    Ejemplos: 17175685-K, , 40824133-F
+  - FacturaFax                     String     (required)
+    Ejemplos: , , 
+  - FacturaCodCliente              Integer    (required)
+    Ejemplos: 21211, 20099, 256
+  - FacturaAlias                   unknown    (nullable)
+  - FacturaSector                  unknown    (nullable)
+  - FacturaSubSector               unknown    (nullable)
+  - FacturaDtoComercialPor         Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaDtoPPPor                Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaACuenta                 Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaNumeroPresupuesto       Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaAnoPresupuesto          Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaBancoCodigo             String     (nullable)
+  - FacturaBancoNombre             String     (nullable)
+  - FacturaCobrada                 String     (required)
+    Ejemplos: NO, NO, NO
+  - FacturaCerrada                 String     (required)
+    Ejemplos: NO, NO, NO
+  - FacturaDetallado               String     (required)
+    Ejemplos: NO, NO, NO
+  - FacturaCodSerie                Integer    (required)
+    Ejemplos: 1, 1, 1
+  - FacturaTipoCliente             unknown    (nullable)
+  - AplicarIVANulo                 Integer    (required)
+    Ejemplos: 1, 1, 1
+  - AplicarRE                      Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaSubCuenta               String     (required)
+    Ejemplos: 70000000, 70000000, 70000000
+  - FacturaRegistro                Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaIDOperacion             Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaTotalCompra             Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaDP                      String     (nullable)
+  - FacturaFP                      String     (nullable)
+    Ejemplos: CONTADO, CONTADO, CONTADO
+  - FacturaCFP                     Integer    (required)
+    Ejemplos: 1, 1, 1
+  - FacturaBFP                     String     (nullable)
+  - FacturaCBFP                    String     (nullable)
+  - FacturaBultos                  Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaContacto                String     (nullable)
+  - FacturaMonedaEmpresa           unknown    (nullable)
+  - FacturaMonedaDocumento         unknown    (nullable)
+  - FacturaFactorConversion        unknown    (nullable)
+  - FacturaObservaciones           String     (required)
+    Ejemplos: , , 
+  - FacturaPlazoEntrega            unknown    (nullable)
+  - FacturaLugarEntrega            unknown    (nullable)
+  - FacturaAgencia                 unknown    (nullable)
+  - FacturaSolicitadoPor           String     (required)
+    Ejemplos: , , 
+  - FacturaFacturado               String     (required)
+    Ejemplos: SI, SI, SI
+  - FacturaFacturaNumero           Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaFacturaAno              Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaFacturaSerie            unknown    (nullable)
+  - FacturaReferencia              unknown    (nullable)
+  - FacturaRepresentante           unknown    (nullable)
+  - FacturaFechaConfirmacion       unknown    (nullable)
+  - FacturaFechaEntrega            unknown    (nullable)
+  - FacturaDiasEntrega             Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaFechaFinMontaje         unknown    (nullable)
+  - FacturaHoraEntrega             unknown    (nullable)
+  - FacturaDiasMontaje             unknown    (nullable)
+  - FacturaProvAcre                Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaFechaEntrada            unknown    (nullable)
+  - FacturaRetencion               Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaTipoRetencion           Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaEntryID                 unknown    (nullable)
+  - Asiento                        Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaSubcuentaRetencion      unknown    (nullable)
+  - FacturaContadorOrdenCompra     Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaCodigoProyecto          Integer    (required)
+    Ejemplos: 0, 0, 0
+  - FacturaPortes                  Integer    (required)
+    Ejemplos: 0, 0, 0
+
+Tabla: SeriesFacturacion (2 registros)
+Columnas:
+  - NumeroInicial                  Integer    (required) [UNIQUE]
+    Ejemplos: 0, 1
+  - NombreSerie                    String     (required) [UNIQUE]
+    Ejemplos: SERIE RECTIFICATIVA, Standard
+  - Observaciones                  String     (required) [UNIQUE]
+    Ejemplos: SERIE FACTURAS ANULADAS, 
+  - CodigoSerie                    Integer    (required) [UNIQUE]
+    Ejemplos: 2, 1
+  - Cuenta                         String     (required)
+    Ejemplos: , 
+  - NombreCuenta                   String     (required)
+    Ejemplos: , 
+
+
+📦 OTRAS TABLAS (55)
+--------------------------------------------------------------------------------
+
+AgenciasTransporte (1 registros) - 3 columnas
+  Columnas: CodigoAgencia, NombreAgencia, TipoPortes
+
+Almacenes (1 registros) - 4 columnas
+  Columnas: Valor, Nombre, Observaciones, CodigoAlmacen
+
+BotoxEvolucion (4642 registros) - 17 columnas
+  Columnas: Contador, ContadorBotox, Fecha, Facultativo, Dosis, NumeroInyecciones, Zonas, Observaciones, CodCliente, CodMedico, CodZona, Producto, CodProducto, Importe, Facturable, Facturado, Cerrado
+
+Colores (12 registros) - 3 columnas
+  Columnas: Color, Porcentaje, codigo
+
+Control (3 registros) - 3 columnas
+  Columnas: Usuario, Password, Aplicacion
+
+DatosBancariosEmpresa (2 registros) - 8 columnas
+  Columnas: BancoNombre, BancoEntidad, BancoOficina, BancoDC, BancoCuenta, BancoObservaciones, SubCuenta, Codigo
+
+DatosConfiguracion (1 registros) - 44 columnas
+  Columnas: CodAlmacenPredeterminado, ComboAlmacenes_Pedido, ComboUnidades_Pedido, ComboColores_Pedido, ComboProveedores_Pedido, ComboIVA_Pedido, ComboAlmacenes_FacturaCompra, ComboUnidades_FacturaCompra, ComboColores_FacturaCompra, ComboProveedores_FacturaCompra, ComboIVA_FacturaCompra, ComboAlmacenes_AlbaranCompra, ComboUnidades_AlbaranCompra, ComboColores_AlbaranCompra, ComboProveedores_AlbaranCompra, ComboIVA_AlbaranCompra, ComboAlmacenes_Factura, ComboUnidades_Factura, ComboColores_Factura, ComboProveedores_Factura, ComboIVA_Factura, ComboAlmacenes_Presupuesto, ComboUnidades_Presupuesto, ComboColores_Presupuesto, ComboProveedores_Presupuesto, ComboIVA_Presupuesto, ComboAlmacenes_OrdenCompra, ComboUnidades_OrdenCompra, ComboColores_OrdenCompra, ComboProveedores_OrdenCompra, ComboIVA_OrdenCompra, ComboAlmacenes_Albaran, ComboUnidades_Albaran, ComboColores_Albaran, ComboProveedores_Albaran, ComboIVA_Albaran, TrabajarConIVAFactura, TrabajarConIVAFacturaCompra, TrabajarConIVAAlbaran, TrabajarConIVAAlbaranCompra, TrabajarConIVAOrdenCompra, TrabajarConIVAPedido, TrabajarConIVAPresupuesto, PreciosConIVAIncluido
+
+DatosConfiguracionEMail (1 registros) - 11 columnas
+  Columnas: SMTPHost, CuentaEMail, NombreMostrar, Mensaje, Asunto, Contrasena, PuertoSMTP, POP3Host, Usuario, Url, Html
+
+DatosConfiguracionSMS (1 registros) - 4 columnas
+  Columnas: Empresa, Usuario, Contrasena, Mensaje
+
+DatosEmpresa (0 registros) - 0 columnas
+  Columnas: 
+
+DescPresupuesto (17306 registros) - 34 columnas
+  Columnas: Contador, Delegacion, DescPresupuestoLinea, DescPresupuestoPrecio, DescPresupuestoCantidad, DescPresupuestoNombreP, DescPresupuestoDescP, DescPresupuestoGrupoP, DescPresupuestoProveedor, DescPresupuestoCodProveedor, DescPresupuestoArticulo, DescPresupuestoDtoPor, DescPresupuestoTipoIVA, DescPresupuestoTipoRE, DescPresupuestoAlmacen, DescPresupuestoCodAlmacen, DescPresupuestoColorNombre, DescPresupuestoColorValor, DescPresupuestoUnidadesNombre, DescPresupuestoUnidadesValor, DescPresupuestoCompuesto, DescPresupuestoTotalCompra, DescPresupuestoObservacion, DescPresupuestoRecibidos, DescPresupuestoEntregados, DescPresupuestoReferencia, DescPresupuestoMedida, DescPresupuestoPedidoDelKViene, DescPresupuestoOperario, DescPresupuestoIdOperario, DescPresupuestoTipoLinea, DescPresupuestoNumeroPlantillaEnDescPlantilla, DescPresupuestoFacturado, DescPresupuestoRetencionPor
+
+DescTicket (4992 registros) - 34 columnas
+  Columnas: Contador, Delegacion, DescTicketLinea, DescTicketPrecio, DescTicketCantidad, DescTicketNombreP, DescTicketDescP, DescTicketGrupoP, DescTicketProveedor, DescTicketCodProveedor, DescTicketArticulo, DescTicketDtoPor, DescTicketTipoIVA, DescTicketTipoRE, DescTicketAlmacen, DescTicketCodAlmacen, DescTicketColorNombre, DescTicketColorValor, DescTicketUnidadesNombre, DescTicketUnidadesValor, DescTicketCompuesto, DescTicketTotalCompra, DescTicketObservacion, DescTicketRecibidos, DescTicketEntregados, DescTicketReferencia, DescTicketMedida, DescTicketPedidoDelKViene, DescTicketOperario, DescTicketIdOperario, DescTicketTipoLinea, DescTicketNumeroPlantillaEnDescPlantilla, DescTicketFacturado, DescTicketRetencionPor
+
+Diario (63560 registros) - 9 columnas
+  Columnas: COD_DIARIO, COD_CLIENTE, COD_TRATAMIENTO, COD_MEDICO, COD_SALA, FECHA, HORA_INICIO, HORA_FIN, OBSERVACIONES
+
+DietaEvolucion (9550 registros) - 20 columnas
+  Columnas: Contador, ContadorDieta, Peso, CodCliente, Cintura, Infraumbilical, Caderas, RaizMuslo, Bitrocanterea, Observaciones, Fecha, Tipo, CodTratamiento, Tratamiento, CodMedico, Medico, Importe, Facturable, Facturado, Cerrado
+
+Dietas (1140 registros) - 11 columnas
+  Columnas: Codigo, CodCliente, NombreCliente, CodProducto, NombreProducto, CodMedico, Fecha, Observaciones, NombreDocumentoWord, Facturado, PrecioAproximado
+
+FlebologiaEvolucion (2724 registros) - 16 columnas
+  Columnas: Contador, ContadorFlebologia, Fecha, Zonas, Observaciones, CodCliente, Producto, CodProducto, Medico, CodMedico, CodZona, Volumen, Importe, Facturable, Facturado, Cerrado
+
+Flebologias (564 registros) - 13 columnas
+  Columnas: Codigo, CodCliente, NombreCliente, CodProducto, NombreProducto, CodZona, NombreZona, Volumen, CodMedico, Fecha, Observaciones, Facturado, PrecioAproximado
+
+FormasPago (1 registros) - 6 columnas
+  Columnas: CodigoFormaPago, NombreFormaPago, NumeroVencimientos, DiasPrimerVencimiento, DiasEntreVencimiento, Acepto
+
+GastosEspeciales (1789 registros) - 6 columnas
+  Columnas: Concepto, Importe, Fecha, Facturado, Usuario, LastUpdate
+
+HistoriaClinica (172 registros) - 17 columnas
+  Columnas: Contador, CodCliente, Fotografia, Consentimiento, TratamientoClinica, Enfermedad, Alergias, Medicamentos, Fuma, Tratamiento, TratamientoOK, Cremas, Hematomas, Queloide, Exploracion, Otros, Fecha
+
+HoraCapacidad (19 registros) - 2 columnas
+  Columnas: Hora, Capacidad
+
+Infiltraciones (1642 registros) - 12 columnas
+  Columnas: Codigo, CodCliente, NombreCliente, CodProducto, NombreProducto, CodZona, NombreZona, CodMedico, Fecha, Observaciones, Facturado, PrecioAproximado
+
+InfiltracionEvolucion (5394 registros) - 25 columnas
+  Columnas: Contador, ContadorInfiltracion, Fecha, PomuloD, GlabelaresD, ComisuraD, NasaogenianasD, PerfilLabioD, RellenoLabioD, PomuloI, GlabelaresI, ComisuraI, NasaogenianasI, PerfilLabioI, RellenoLabioI, Otros, CodCliente, Producto, CodProducto, Medico, CodMedico, Importe, Facturable, Facturado, Cerrado
+
+Lasers (2599 registros) - 13 columnas
+  Columnas: Codigo, CodCliente, NombreCliente, CodZona, NombreZona, Pulso, Spot, Potencia, CodMedico, Fecha, Observaciones, Facturado, PrecioAproximado
+
+Otros (3127 registros) - 9 columnas
+  Columnas: Codigo, CodCliente, NombreCliente, Tratamiento, CodMedico, Fecha, Observaciones, Facturado, PrecioAproximado
+
+Paises (1 registros) - 2 columnas
+  Columnas: CodigoPais, NombrePais
+
+PeelingEvolucion (2802 registros) - 16 columnas
+  Columnas: Contador, ContadorPeeling, Fecha, Dosis, Observaciones, CodCliente, CodProducto, Producto, CodMedico, Medico, CodZona, Zona, Importe, Facturable, Facturado, Cerrado
+
+Peelings (780 registros) - 13 columnas
+  Columnas: Codigo, CodCliente, NombreCliente, CodProducto, NombreProducto, CodTipoPiel, NombreTipoPiel, Tiempo, CodMedico, Fecha, Observaciones, Facturado, PrecioAproximado
+
+PermisosMenu (202 registros) - 2 columnas
+  Columnas: usuario, menu
+
+Presupuesto (9922 registros) - 78 columnas
+  Columnas: Contador, Delegacion, PresupuestoNumero, PresupuestoAno, PresupuestoMes, PresupuestoFecha, PresupuestoSerie, PresupuestoValorado, PresupuestoNombre, PresupuestoApellidos, PresupuestoVia, PresupuestoDireccion, PresupuestoLocalidad, PresupuestoProvincia, PresupuestoCodPostal, PresupuestoTelefono, PresupuestoTelefono2, PresupuestoNif, PresupuestoFax, PresupuestoCodCliente, PresupuestoAlias, PresupuestoSector, PresupuestoSubSector, PresupuestoDtoComercialPor, PresupuestoDtoPPPor, PresupuestoACuenta, PresupuestoNumeroPresupuesto, PresupuestoAnoPresupuesto, PresupuestoBancoCodigo, PresupuestoBancoNombre, PresupuestoCobrada, PresupuestoCerrada, PresupuestoDetallado, PresupuestoCodSerie, PresupuestoTipoCliente, AplicarIVANulo, AplicarRE, PresupuestoSubCuenta, PresupuestoRegistro, PresupuestoIDOperacion, PresupuestoTotalCompra, PresupuestoDP, PresupuestoFP, PresupuestoCFP, PresupuestoBFP, PresupuestoCBFP, PresupuestoBultos, PresupuestoContacto, PresupuestoMonedaEmpresa, PresupuestoMonedaDocumento, PresupuestoFactorConversion, PresupuestoObservaciones, PresupuestoPlazoEntrega, PresupuestoLugarEntrega, PresupuestoAgencia, PresupuestoSolicitadoPor, PresupuestoFacturado, PresupuestoFacturaNumero, PresupuestoFacturaAno, PresupuestoFacturaSerie, PresupuestoReferencia, PresupuestoRepresentante, PresupuestoFechaConfirmacion, PresupuestoFechaEntrega, PresupuestoDiasEntrega, PresupuestoFechaFinMontaje, PresupuestoHoraEntrega, PresupuestoDiasMontaje, PresupuestoProvAcre, PresupuestoFechaEntrada, PresupuestoRetencion, PresupuestoTipoRetencion, PresupuestoEntryID, Asiento, PresupuestoSubcuentaRetencion, PresupuestoContadorOrdenCompra, PresupuestoCodigoProyecto, PresupuestoPortes
+
+Productos (49 registros) - 3 columnas
+  Columnas: ProductoCod, ProductoNombre, ProductoTratamiento
+
+ProductosVenta (131 registros) - 5 columnas
+  Columnas: ProductoClave, ProductoNombre, ProductoPV, ProductoTipoIva, ProductoTratamiento
+
+Provincias (52 registros) - 5 columnas
+  Columnas: CodigoProvincias, CodigoProvinciasPais, NombrePais, NombreProvincias, ZonaProvincias
+
+Remanente (1 registros) - 1 columnas
+  Columnas: Remanente
+
+rptSeleccionEmail (2498 registros) - 2 columnas
+  Columnas: Codigo, Aleatorio
+
+SMSsEnviados (7521 registros) - 5 columnas
+  Columnas: CodCliente, Fecha, Telefono, NumeroEnviados, Usuario
+
+Ticket (3337 registros) - 78 columnas
+  Columnas: Contador, Delegacion, TicketNumero, TicketAno, TicketMes, TicketFecha, TicketSerie, TicketValorado, TicketNombre, TicketApellidos, TicketVia, TicketDireccion, TicketLocalidad, TicketProvincia, TicketCodPostal, TicketTelefono, TicketTelefono2, TicketNif, TicketFax, TicketCodCliente, TicketAlias, TicketSector, TicketSubSector, TicketDtoComercialPor, TicketDtoPPPor, TicketACuenta, TicketNumeroPresupuesto, TicketAnoPresupuesto, TicketBancoCodigo, TicketBancoNombre, TicketCobrada, TicketCerrada, TicketDetallado, TicketCodSerie, TicketTipoCliente, AplicarIVANulo, AplicarRE, TicketSubCuenta, TicketRegistro, TicketIDOperacion, TicketTotalCompra, TicketDP, TicketFP, TicketCFP, TicketBFP, TicketCBFP, TicketBultos, TicketContacto, TicketMonedaEmpresa, TicketMonedaDocumento, TicketFactorConversion, TicketObservaciones, TicketPlazoEntrega, TicketLugarEntrega, TicketAgencia, TicketSolicitadoPor, TicketFacturado, TicketFacturaNumero, TicketFacturaAno, TicketFacturaSerie, TicketReferencia, TicketRepresentante, TicketFechaConfirmacion, TicketFechaEntrega, TicketDiasEntrega, TicketFechaFinMontaje, TicketHoraEntrega, TicketDiasMontaje, TicketProvAcre, TicketFechaEntrada, TicketRetencion, TicketTipoRetencion, TicketEntryID, Asiento, TicketSubcuentaRetencion, TicketContadorOrdenCompra, TicketCodigoProyecto, TicketPortes
+
+TipoDietas (9 registros) - 2 columnas
+  Columnas: TipoDietaCod, TipoDietaNombre
+
+TipoIVA (4 registros) - 6 columnas
+  Columnas: ID Tipo, Nombre, IVA, RE, Compuesto, Predeterminado
+
+TiposIva (1 registros) - 4 columnas
+  Columnas: IVA_COD, IVA_DESCRIPCION, IVA_PORCENTAJE, IVA_RECARGO
+
+TiposPiel (7 registros) - 2 columnas
+  Columnas: TiposPielCod, TiposPielNombre
+
+Trabajadores (3 registros) - 48 columnas
+  Columnas: CodCliente, Nombre, Nif, Alias, Via, Domicilio, Poblacion, CodPostal, Provincia, Pais, Telefono1, Telefono2, TelefonoMovil, Fax, Email, PersonaContacto, ObservacionesGenerales, CondicionesEspeciales, ObservacionesExposicion, DescuentoCom, DescuentoEsp, DescuentoPP, IVA, RE, FormaPago, CodigoFormaPago, Sector, SubSector, Representante, ComisionRepresentante, DiaPagoUno, DiaPagoDos, Facturado, DiaInicialNoGiro, DiaFinalNoGiro, MesInicialNoGiro, MesFinalNoGiro, DocumentoPago, TipoCPA, OtrasObservaciones, AplicarIVANulo, AplicarRE, SubCuenta, WebCliente, Outlook, BancoNombre, BancoCuenta, Organizador
+
+UnidadesMedida (9 registros) - 2 columnas
+  Columnas: Nombre, Metros
+
+Usuarios (0 registros) - 0 columnas
+  Columnas: 
+
+Via (10 registros) - 2 columnas
+  Columnas: Via, ViaAbreviada
+
+ZonaCuerpo (86 registros) - 3 columnas
+  Columnas: ZonaCuerpoCod, ZonaCuerpoNombre, ZonaCuerpoTratamiento
+
+Botox (1285 registros) - 12 columnas
+  Columnas: Codigo, CodCliente, NombreCliente, CodProducto, NombreProducto, CodZona, NombreZona, CodMedico, Fecha, Observaciones, Facturado, PrecioAproximado
+
+DescDocumentos (5 registros) - 8 columnas
+  Columnas: CodCliente, Documento, Com1, Com2, Com3, Com4, Com5, Com6
+
+EmailsEnviados (0 registros) - 0 columnas
+  Columnas: 
+
+FTPActualizarWEB (1 registros) - 10 columnas
+  Columnas: Usuario, Password, DirectorioFotos, DirectorioFotosBD, Servidor, Web, BDServidor, BDUsuario, BDNombre, BDPassword
+
+LaserEvolucion (12078 registros) - 16 columnas
+  Columnas: Contador, ContadorLaser, Fecha, Dosis, NumeroDisparos, Zonas, Spot, Observaciones, CodCliente, CodMedico, Medico, CodZona, Importe, Facturable, Facturado, Cerrado
+
+OtrosEvolucion (10544 registros) - 13 columnas
+  Columnas: Contador, ContadorOtros, Fecha, Observaciones, CodCliente, CodMedico, Medico, CodProducto, Producto, Importe, Facturable, Facturado, Cerrado
+
+Poblaciones (60189 registros) - 6 columnas
+  Columnas: CodigoPoblaciones, NombrePoblaciones, CodigoPoblacionesPais, NombrePoblacionesPais, CodigoPoblacionesProvincias, NombrePoblacionesProvincias
+
+rptSeleccion (0 registros) - 0 columnas
+  Columnas: 
+
+TipoDocumento (2 registros) - 1 columnas
+  Columnas: TipoDocumento
+
+
+💡 SUGERENCIAS:
+--------------------------------------------------------------------------------
+1. Revisa las columnas marcadas como [UNIQUE] - pueden ser IDs
+2. Campos (nullable) pueden tener valor por defecto en el mapeo
+3. Busca relaciones por nombres similares (ej: ClienteID, ID_Cliente)
+4. Tablas con pocos registros (<50) pueden ser catálogos

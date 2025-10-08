@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -60,7 +61,7 @@ interface Patient {
   patientCode?: string;
   firstName: string;
   lastName: string;
-  documentNumber?: string; // Para compatibilidad con tu esquema actual
+  documentNumber?: string;
   dni?: string;
   email: string;
   phone: string;
@@ -79,9 +80,12 @@ interface Patient {
 }
 
 export default function PatientsPage() {
+  const navigate = useNavigate();
+  
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchMode, setSearchMode] = useState<'general' | 'phone' | 'initials'>('general');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalPatients, setTotalPatients] = useState(0);
@@ -105,35 +109,33 @@ export default function PatientsPage() {
   };
 
   const loadPatients = useCallback(async () => {
-  setLoading(true);
-  try {
-    let params: any = {
-      page: page + 1,
-      limit: rowsPerPage
-    };
+    setLoading(true);
+    try {
+      let params: any = {
+        page: page + 1,
+        limit: rowsPerPage
+      };
 
-    // Búsqueda universal - el backend buscará en todos los campos
-    if (searchTerm) {
-      params.search = searchTerm;
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      const response = await api.get('/patients', { params });
+      
+      if (response.data.data) {
+        setPatients(response.data.data);
+        setTotalPatients(response.data.pagination?.total || response.data.data.length);
+      } else {
+        setPatients(response.data);
+        setTotalPatients(response.data.length);
+      }
+    } catch (error) {
+      console.error('Error loading patients:', error);
+      showSnackbar('Error al cargar pacientes', 'error');
+    } finally {
+      setLoading(false);
     }
-
-    const response = await api.get('/patients', { params });
-    
-    if (response.data.data) {
-      setPatients(response.data.data);
-      setTotalPatients(response.data.pagination?.total || response.data.data.length);
-    } else {
-      setPatients(response.data);
-      setTotalPatients(response.data.length);
-    }
-  } catch (error) {
-    console.error('Error loading patients:', error);
-    showSnackbar('Error al cargar pacientes', 'error');
-  } finally {
-    setLoading(false);
-  }
-}, [page, rowsPerPage, searchTerm]);
-
+  }, [page, rowsPerPage, searchTerm]);
 
   useEffect(() => {
     loadPatients();
@@ -145,9 +147,9 @@ export default function PatientsPage() {
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  setSearchTerm(event.target.value);
-  setPage(0); // Resetear a primera página al buscar
-};
+    setSearchTerm(event.target.value);
+    setPage(0);
+  };
 
   const handleSearchModeChange = (event: React.MouseEvent<HTMLElement>, newMode: string | null) => {
     if (newMode !== null) {
@@ -189,32 +191,26 @@ export default function PatientsPage() {
   };
 
   const handleEditPatient = async (patient?: Patient) => {
-  const patientToEdit = patient || selectedPatient;
-  if (patientToEdit) {
-    try {
-      setLoading(true);
-      // Obtener los datos completos del paciente desde el backend
-      const response = await api.get(`/patients/${patientToEdit.id}`);
-      
-      // Guardar los datos completos en el estado
-      setSelectedPatient(response.data);
-      
-      // Abrir el modal en modo edición
-      setFormMode('edit');
-      setFormModalOpen(true);
-      
-      // Cerrar el menú si está abierto
-      if (anchorEl) {
-        handleMenuClose();
+    const patientToEdit = patient || selectedPatient;
+    if (patientToEdit) {
+      try {
+        setLoading(true);
+        const response = await api.get(`/patients/${patientToEdit.id}`);
+        setSelectedPatient(response.data);
+        setFormMode('edit');
+        setFormModalOpen(true);
+        
+        if (anchorEl) {
+          handleMenuClose();
+        }
+      } catch (error) {
+        console.error('Error loading patient details:', error);
+        showSnackbar('Error al cargar los datos del paciente', 'error');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading patient details:', error);
-      showSnackbar('Error al cargar los datos del paciente', 'error');
-    } finally {
-      setLoading(false);
     }
-  }
-};
+  };
 
   const handleDeleteClick = (patient?: Patient) => {
     const patientToDelete = patient || selectedPatient;
@@ -226,73 +222,68 @@ export default function PatientsPage() {
   };
 
   const handleDeleteConfirm = async () => {
-  if (!patientToDelete) return;
+    if (!patientToDelete) return;
 
-  try {
-    // Primero obtener todos los datos del paciente para poder restaurarlo
-    const fullPatientData = await api.get(`/patients/${patientToDelete.id}`);
+    try {
+      const fullPatientData = await api.get(`/patients/${patientToDelete.id}`);
+      
+      await api.delete(`/patients/${patientToDelete.id}`);
+      
+      historyService.addAction({
+        type: 'DELETE',
+        entity: 'PATIENT',
+        entityId: patientToDelete.id,
+        description: `Eliminado: ${patientToDelete.firstName} ${patientToDelete.lastName}`,
+        previousData: fullPatientData.data,
+        userId: 'current-user',
+        undoable: true
+      });
+      
+      showSnackbar('Paciente eliminado correctamente (puede deshacer esta acción)', 'success');
+      loadPatients();
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Error al eliminar paciente';
+      showSnackbar(message, 'error');
+    } finally {
+      setDeleteDialogOpen(false);
+      setPatientToDelete(null);
+    }
+  };
+
+  const handleFormSave = async (savedPatient?: any) => {
+    const message = formMode === 'create' 
+      ? 'Paciente creado correctamente' 
+      : 'Paciente actualizado correctamente';
     
-    await api.delete(`/patients/${patientToDelete.id}`);
+    if (formMode === 'create' && savedPatient) {
+      historyService.addAction({
+        type: 'CREATE',
+        entity: 'PATIENT',
+        entityId: savedPatient.id,
+        description: `Nuevo paciente: ${savedPatient.firstName} ${savedPatient.lastName}`,
+        newData: savedPatient,
+        userId: 'current-user',
+        undoable: true
+      });
+    } else if (formMode === 'edit' && selectedPatient && savedPatient) {
+      historyService.addAction({
+        type: 'UPDATE',
+        entity: 'PATIENT',
+        entityId: selectedPatient.id,
+        description: `Actualizado: ${savedPatient.firstName} ${savedPatient.lastName}`,
+        previousData: selectedPatient,
+        newData: savedPatient,
+        userId: 'current-user',
+        undoable: true
+      });
+    }
     
-    // Registrar en el historial con todos los datos
-    historyService.addAction({
-      type: 'DELETE',
-      entity: 'PATIENT',
-      entityId: patientToDelete.id,
-      description: `Eliminado: ${patientToDelete.firstName} ${patientToDelete.lastName}`,
-      previousData: fullPatientData.data, // Guardar datos completos
-      userId: 'current-user',
-      undoable: true
-    });
+    showSnackbar(message + ' (puede deshacer esta acción)', 'success');
     
-    showSnackbar('Paciente eliminado correctamente (puede deshacer esta acción)', 'success');
+    setSelectedPatient(null);
+    setFormModalOpen(false);
     loadPatients();
-  } catch (error: any) {
-    const message = error.response?.data?.message || 'Error al eliminar paciente';
-    showSnackbar(message, 'error');
-  } finally {
-    setDeleteDialogOpen(false);
-    setPatientToDelete(null);
-  }
-};
-
-const handleFormSave = async (savedPatient?: any) => {
-  const message = formMode === 'create' 
-    ? 'Paciente creado correctamente' 
-    : 'Paciente actualizado correctamente';
-  
-  // Registrar en el historial
-  if (formMode === 'create' && savedPatient) {
-    historyService.addAction({
-      type: 'CREATE',
-      entity: 'PATIENT',
-      entityId: savedPatient.id,
-      description: `Nuevo paciente: ${savedPatient.firstName} ${savedPatient.lastName}`,
-      newData: savedPatient,
-      userId: 'current-user',
-      undoable: true
-    });
-  } else if (formMode === 'edit' && selectedPatient && savedPatient) {
-    historyService.addAction({
-      type: 'UPDATE',
-      entity: 'PATIENT',
-      entityId: selectedPatient.id,
-      description: `Actualizado: ${savedPatient.firstName} ${savedPatient.lastName}`,
-      previousData: selectedPatient, // Datos anteriores (completos)
-      newData: savedPatient, // Nuevos datos
-      userId: 'current-user',
-      undoable: true
-    });
-  }
-  
-  showSnackbar(message + ' (puede deshacer esta acción)', 'success');
-  
-  // Limpiar el estado y recargar
-  setSelectedPatient(null);
-  setFormModalOpen(false);
-  loadPatients();
-
-};
+  };
 
   const calculateAge = (birthDate?: string) => {
     if (!birthDate) return '-';
@@ -320,10 +311,10 @@ const handleFormSave = async (savedPatient?: any) => {
   };
 
   return (
-    <Box>
+    <Box sx={{ px: 4, pt: 3, pb: 4 }}>
       {/* Encabezado */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" component="h1">
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
           Gestión de Pacientes
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
@@ -332,7 +323,7 @@ const handleFormSave = async (savedPatient?: any) => {
             startIcon={<HistoryIcon />}
             onClick={() => setHistoryPanelOpen(true)}
           >
-            Historial
+            Historial de Acciones
           </Button>
           <Button
             variant="contained"
@@ -349,10 +340,10 @@ const handleFormSave = async (savedPatient?: any) => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              <Typography color="textSecondary" gutterBottom variant="body2">
                 Total Pacientes
               </Typography>
-              <Typography variant="h4">
+              <Typography variant="h4" sx={{ fontWeight: 600 }}>
                 {totalPatients}
               </Typography>
             </CardContent>
@@ -484,19 +475,32 @@ const handleFormSave = async (savedPatient?: any) => {
                   ) : '-'}
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEditPatient(patient)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    color="error"
-                    onClick={() => handleDeleteClick(patient)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  <Tooltip title="Ver Historial Médico">
+                    <IconButton
+                      size="small"
+                      color="info"
+                      onClick={() => navigate(`/patients/${patient.id}/history`)}
+                    >
+                      <MedicalIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Editar">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditPatient(patient)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Eliminar">
+                    <IconButton 
+                      size="small" 
+                      color="error"
+                      onClick={() => handleDeleteClick(patient)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
                   <IconButton
                     size="small"
                     onClick={(e) => handleMenuClick(e, patient)}
@@ -540,7 +544,7 @@ const handleFormSave = async (savedPatient?: any) => {
           Editar
         </MenuItem>
         <MenuItem onClick={() => {
-          console.log('Ver historia clínica');
+          navigate(`/patients/${selectedPatient?.id}/history`);
           handleMenuClose();
         }}>
           <MedicalIcon fontSize="small" sx={{ mr: 1 }} />
@@ -571,10 +575,10 @@ const handleFormSave = async (savedPatient?: any) => {
         open={formModalOpen}
         onClose={() => {
           setFormModalOpen(false);
-          setSelectedPatient(null); // Limpiar al cerrar
+          setSelectedPatient(null);
         }}
         onSave={handleFormSave}
-        patient={selectedPatient} // Pasar los datos del paciente seleccionado
+        patient={selectedPatient}
         mode={formMode}
       />
 

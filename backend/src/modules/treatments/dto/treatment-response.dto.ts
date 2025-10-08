@@ -29,8 +29,8 @@ export class TreatmentWithAppointmentsDto extends TreatmentResponseDto {
       lastName: string;
     };
     staff: {
-      firstName: string;
-      lastName: string;
+      username: string;
+      email: string;
     };
   }[];
 }

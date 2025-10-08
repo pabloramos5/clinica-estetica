@@ -14,65 +14,28 @@ import {
   Autocomplete,
   Alert,
   Stack,
-  Divider,
   Paper,
   MenuItem,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  CircularProgress
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Person as PersonIcon,
   MedicalServices as MedicalIcon,
-  AccessTime as TimeIcon,
-  Room as RoomIcon,
   CalendarMonth as CalendarIcon,
   Phone as PhoneIcon,
-  Email as EmailIcon
+  Email as EmailIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { es } from 'date-fns/locale';
 import { format, addMinutes } from 'date-fns';
 import api from '../../services/api';
-
-// Interfaces de tipos
-interface Doctor {
-  id: string;
-  firstName: string;
-  lastName: string;
-  specialty?: string;
-}
-
-interface Room {
-  id: string;
-  name: string;
-  capacity?: number;
-}
-
-interface Treatment {
-  id: string;
-  name: string;
-  duration: number;
-  price: number;
-}
-
-interface Patient {
-  id: string;
-  firstName: string;
-  lastName: string;
-  documentNumber?: string;
-  dni?: string;
-  phone: string;
-  email?: string;
-}
-
-interface TimeSlot {
-  start: string;
-  end: string;
-  display: string;
-}
+import { appointmentService } from '../../services/appointmentService';
 
 interface AppointmentFormModalProps {
   open: boolean;
@@ -93,17 +56,18 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<any>({});
+  const [conflictWarning, setConflictWarning] = useState<string>('');
   
-  // Estados con tipos específicos
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [treatments, setTreatments] = useState<Treatment[]>([]);
-  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  // Datos auxiliares
+  const [patients, setPatients] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [treatments, setTreatments] = useState<any[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   
   // Estado del formulario
   const [formData, setFormData] = useState({
-    patient: null as Patient | null,
+    patient: null as any,
     doctorId: '',
     roomId: '',
     treatmentId: '',
@@ -113,71 +77,69 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
     observations: ''
   });
 
-  // Búsqueda de pacientes
   const [searchingPatients, setSearchingPatients] = useState(false);
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
+  const [loadingAuxData, setLoadingAuxData] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadAuxiliaryData();
       if (appointment && mode === 'edit') {
-        // Cargar datos de la cita existente
         setFormData({
-          patient: appointment.patient,
-          doctorId: appointment.doctorId,
-          roomId: appointment.roomId,
-          treatmentId: appointment.treatmentId,
-          date: new Date(appointment.date),
-          startTime: new Date(appointment.startTime),
-          endTime: new Date(appointment.endTime),
-          observations: appointment.observations || ''
+          patient: appointment.extendedProps?.patient || null,
+          doctorId: appointment.extendedProps?.doctor?.id || '',
+          roomId: appointment.extendedProps?.room?.id || '',
+          treatmentId: appointment.extendedProps?.treatment?.id || '',
+          date: new Date(appointment.start),
+          startTime: new Date(appointment.start),
+          endTime: new Date(appointment.end),
+          observations: appointment.extendedProps?.observations || ''
         });
       } else {
-        // Resetear para nueva cita
-        setFormData({
-          patient: null,
-          doctorId: '',
-          roomId: '',
-          treatmentId: '',
-          date: selectedDate || new Date(),
-          startTime: null,
-          endTime: null,
-          observations: ''
-        });
+        resetForm();
       }
     }
   }, [open, appointment, mode, selectedDate]);
 
-  const loadAuxiliaryData = async () => {
-    // Datos de prueba con tipos correctos
-    const mockDoctors: Doctor[] = [
-      { id: '1', firstName: 'Juan', lastName: 'García', specialty: 'Dermatología' },
-      { id: '2', firstName: 'María', lastName: 'López', specialty: 'Medicina Estética' },
-      { id: '3', firstName: 'Carlos', lastName: 'Martínez', specialty: 'Cirugía Plástica' }
-    ];
-    
-    const mockRooms: Room[] = [
-      { id: '1', name: 'Sala 1', capacity: 1 },
-      { id: '2', name: 'Sala 2', capacity: 1 },
-      { id: '3', name: 'Sala Láser', capacity: 2 },
-      { id: '4', name: 'Quirófano', capacity: 3 }
-    ];
-    
-    const mockTreatments: Treatment[] = [
-      { id: '1', name: 'Botox', duration: 30, price: 300 },
-      { id: '2', name: 'Ácido Hialurónico', duration: 45, price: 400 },
-      { id: '3', name: 'Peeling Químico', duration: 60, price: 150 },
-      { id: '4', name: 'Láser CO2', duration: 90, price: 600 },
-      { id: '5', name: 'Mesoterapia Facial', duration: 45, price: 200 },
-      { id: '6', name: 'Hilos Tensores', duration: 60, price: 500 }
-    ];
-
-    setDoctors(mockDoctors);
-    setRooms(mockRooms);
-    setTreatments(mockTreatments);
+  const resetForm = () => {
+    setFormData({
+      patient: null,
+      doctorId: '',
+      roomId: '',
+      treatmentId: '',
+      date: selectedDate || new Date(),
+      startTime: null,
+      endTime: null,
+      observations: ''
+    });
+    setErrors({});
+    setConflictWarning('');
   };
 
-  // Buscar pacientes con debounce
+  const loadAuxiliaryData = async () => {
+    setLoadingAuxData(true);
+    try {
+      const [doctorsRes, roomsRes, treatmentsRes] = await Promise.all([
+        api.get('/users', { params: { role: 'MEDICO' } }),
+        api.get('/rooms'),
+        api.get('/treatments', { params: { active: true } })
+      ]);
+
+      const doctorsData = doctorsRes.data.data || doctorsRes.data;
+      const roomsData = roomsRes.data.data || roomsRes.data;
+      const treatmentsData = treatmentsRes.data.data || treatmentsRes.data;
+
+      setDoctors(doctorsData.filter((d: any) => d.role === 'MEDICO'));
+      setRooms(roomsData);
+      setTreatments(treatmentsData);
+    } catch (error) {
+      console.error('Error loading auxiliary data:', error);
+      setErrors({ general: 'Error al cargar los datos del formulario' });
+    } finally {
+      setLoadingAuxData(false);
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (patientSearchTerm && patientSearchTerm.length >= 2) {
@@ -207,28 +169,23 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // Si cambia el tratamiento, calcular hora de fin
       if (field === 'treatmentId' && newData.startTime) {
-        const treatment = treatments.find((t) => t.id === value);
+        const treatment = treatments.find(t => t.id === value);
         if (treatment) {
-          const endTime = addMinutes(newData.startTime, treatment.duration || 60);
-          newData.endTime = endTime;
+          newData.endTime = addMinutes(newData.startTime, treatment.duration || 60);
         }
       }
       
-      // Si cambia la hora de inicio y hay tratamiento seleccionado
       if (field === 'startTime' && newData.treatmentId) {
-        const treatment = treatments.find((t) => t.id === newData.treatmentId);
-        if (treatment) {
-          const endTime = addMinutes(value, treatment.duration || 60);
-          newData.endTime = endTime;
+        const treatment = treatments.find(t => t.id === newData.treatmentId);
+        if (treatment && value) {
+          newData.endTime = addMinutes(value, treatment.duration || 60);
         }
       }
       
       return newData;
     });
     
-    // Limpiar error del campo
     if (errors[field]) {
       setErrors((prev: any) => {
         const newErrors = { ...prev };
@@ -236,7 +193,39 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
         return newErrors;
       });
     }
+    
+    setConflictWarning('');
   };
+
+  // Verificar disponibilidad en tiempo real
+  useEffect(() => {
+    const checkAvailability = async () => {
+      if (formData.date && formData.startTime && formData.endTime && 
+          formData.doctorId && formData.roomId) {
+        try {
+          const result = await appointmentService.checkAvailability({
+            date: format(formData.date, 'yyyy-MM-dd'),
+            startTime: formData.startTime.toISOString(),
+            endTime: formData.endTime.toISOString(),
+            roomId: formData.roomId,
+            doctorId: formData.doctorId,
+            excludeAppointmentId: appointment?.id
+          });
+
+          if (!result.available) {
+            setConflictWarning('⚠️ El horario seleccionado tiene conflictos con otra cita');
+          } else {
+            setConflictWarning('');
+          }
+        } catch (error) {
+          console.error('Error checking availability:', error);
+        }
+      }
+    };
+
+    const debounce = setTimeout(checkAvailability, 500);
+    return () => clearTimeout(debounce);
+  }, [formData.date, formData.startTime, formData.endTime, formData.doctorId, formData.roomId]);
 
   const validateForm = () => {
     const newErrors: any = {};
@@ -255,6 +244,11 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    if (conflictWarning && mode === 'create') {
+      setErrors({ submit: 'Hay conflictos de horario. Por favor, elige otro horario.' });
+      return;
+    }
+
     setLoading(true);
     try {
       const dataToSend = {
@@ -269,9 +263,9 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       };
 
       if (mode === 'create') {
-        await api.post('/appointments', dataToSend);
+        await appointmentService.create(dataToSend as any);
       } else if (appointment) {
-        await api.patch(`/appointments/${appointment.id}`, dataToSend);
+        await appointmentService.update(appointment.id, dataToSend);
       }
       
       onSave();
@@ -286,32 +280,41 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
 
   const handleClose = () => {
     if (!loading) {
+      resetForm();
       onClose();
     }
   };
 
-  const loadAvailableSlots = async () => {
-    if (formData.date && formData.doctorId && formData.treatmentId) {
-      try {
-        const response = await api.get('/appointments/available-slots', {
-          params: {
-            date: format(formData.date, 'yyyy-MM-dd'),
-            doctorId: formData.doctorId,
-            treatmentId: formData.treatmentId
-          }
-        });
-        setAvailableSlots(response.data);
-      } catch (error) {
-        console.error('Error loading slots:', error);
-        // Si falla, no mostrar slots disponibles
-        setAvailableSlots([]);
-      }
-    }
-  };
-
+  // Cargar slots disponibles
   useEffect(() => {
-    loadAvailableSlots();
+    const loadSlots = async () => {
+      if (formData.date && formData.doctorId && formData.treatmentId) {
+        try {
+          const slots = await appointmentService.getAvailableSlots(
+            format(formData.date, 'yyyy-MM-dd'),
+            formData.doctorId,
+            formData.treatmentId
+          );
+          setAvailableSlots(slots);
+        } catch (error) {
+          console.error('Error loading slots:', error);
+          setAvailableSlots([]);
+        }
+      }
+    };
+
+    loadSlots();
   }, [formData.date, formData.doctorId, formData.treatmentId]);
+
+  if (loadingAuxData) {
+    return (
+      <Dialog open={open} maxWidth="md" fullWidth>
+        <DialogContent sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+          <CircularProgress />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
@@ -342,8 +345,14 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
             </Alert>
           )}
 
+          {conflictWarning && (
+            <Alert severity="warning" sx={{ mb: 3 }} icon={<WarningIcon />}>
+              {conflictWarning}
+            </Alert>
+          )}
+
           <Stack spacing={3}>
-            {/* Sección: Paciente */}
+            {/* Paciente */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
               <Box display="flex" alignItems="center" gap={1} mb={2}>
                 <PersonIcon color="primary" />
@@ -355,8 +364,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
                 onChange={(event, newValue) => handleChange('patient', newValue)}
                 onInputChange={(event, newInputValue) => setPatientSearchTerm(newInputValue)}
                 options={patients}
-                getOptionLabel={(option: Patient) => 
-                  option ? `${option.firstName} ${option.lastName} - ${option.documentNumber || option.dni || ''}` : ''
+                getOptionLabel={(option) => 
+                  option ? `${option.firstName} ${option.lastName} - ${option.documentNumber || ''}` : ''
                 }
                 loading={searchingPatients}
                 loadingText="Buscando pacientes..."
@@ -371,14 +380,14 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
                     fullWidth
                   />
                 )}
-                renderOption={(props, option: Patient) => (
+                renderOption={(props, option) => (
                   <Box component="li" {...props}>
                     <Box>
                       <Typography variant="body1">
                         {option.firstName} {option.lastName}
                       </Typography>
                       <Typography variant="caption" color="textSecondary">
-                        DNI: {option.documentNumber || option.dni || 'N/A'} • Tel: {option.phone}
+                        DNI: {option.documentNumber} • Tel: {option.phone}
                       </Typography>
                     </Box>
                   </Box>
@@ -388,26 +397,16 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
               {formData.patient && (
                 <Box mt={2} p={2} bgcolor="white" borderRadius={1}>
                   <Stack direction="row" spacing={2}>
-                    <Chip 
-                      icon={<PhoneIcon />} 
-                      label={formData.patient.phone} 
-                      size="small" 
-                      variant="outlined"
-                    />
+                    <Chip icon={<PhoneIcon />} label={formData.patient.phone} size="small" variant="outlined" />
                     {formData.patient.email && (
-                      <Chip 
-                        icon={<EmailIcon />} 
-                        label={formData.patient.email} 
-                        size="small" 
-                        variant="outlined"
-                      />
+                      <Chip icon={<EmailIcon />} label={formData.patient.email} size="small" variant="outlined" />
                     )}
                   </Stack>
                 </Box>
               )}
             </Paper>
 
-            {/* Sección: Tratamiento y Personal - CAMPOS MÁS ANCHOS */}
+            {/* Tratamiento y Personal */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
               <Box display="flex" alignItems="center" gap={1} mb={3}>
                 <MedicalIcon color="primary" />
@@ -415,19 +414,14 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
               </Box>
               
               <Stack spacing={3}>
-                {/* Tratamiento - Ancho completo */}
                 <FormControl fullWidth>
-                  <InputLabel id="treatment-label">Tratamiento *</InputLabel>
+                  <InputLabel>Tratamiento *</InputLabel>
                   <Select
-                    labelId="treatment-label"
                     value={formData.treatmentId}
                     onChange={(e) => handleChange('treatmentId', e.target.value)}
                     label="Tratamiento *"
                     error={!!errors.treatmentId}
-                    sx={{ 
-                      minHeight: 56,
-                      width: '100%'
-                    }}
+                    sx={{ minHeight: 56 }}
                   >
                     {treatments.map((treatment) => (
                       <MenuItem key={treatment.id} value={treatment.id}>
@@ -449,12 +443,10 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
                   )}
                 </FormControl>
 
-                {/* Doctor y Sala en fila, cada uno ocupando su espacio completo */}
-                <Box sx={{ display: 'flex', gap: 3, width: '100%' }}>
-                  <FormControl sx={{ flex: 1, minWidth: 200 }}>
-                    <InputLabel id="doctor-label">Doctor *</InputLabel>
+                <Box sx={{ display: 'flex', gap: 3 }}>
+                  <FormControl sx={{ flex: 1 }}>
+                    <InputLabel>Doctor *</InputLabel>
                     <Select
-                      labelId="doctor-label"
                       value={formData.doctorId}
                       onChange={(e) => handleChange('doctorId', e.target.value)}
                       label="Doctor *"
@@ -465,28 +457,22 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
                         <MenuItem key={doctor.id} value={doctor.id}>
                           <Box sx={{ py: 1 }}>
                             <Typography variant="body1" fontWeight="medium">
-                              Dr. {doctor.firstName} {doctor.lastName}
+                              Dr. {doctor.name || doctor.username}
                             </Typography>
-                            {doctor.specialty && (
+                            {doctor.specialization && (
                               <Typography variant="body2" color="textSecondary">
-                                {doctor.specialty}
+                                {doctor.specialization}
                               </Typography>
                             )}
                           </Box>
                         </MenuItem>
                       ))}
                     </Select>
-                    {errors.doctorId && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                        {errors.doctorId}
-                      </Typography>
-                    )}
                   </FormControl>
 
-                  <FormControl sx={{ flex: 1, minWidth: 200 }}>
-                    <InputLabel id="room-label">Sala *</InputLabel>
+                  <FormControl sx={{ flex: 1 }}>
+                    <InputLabel>Sala *</InputLabel>
                     <Select
-                      labelId="room-label"
                       value={formData.roomId}
                       onChange={(e) => handleChange('roomId', e.target.value)}
                       label="Sala *"
@@ -501,75 +487,19 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
                             </Typography>
                             {room.capacity && (
                               <Typography variant="body2" color="textSecondary">
-                                Capacidad: {room.capacity} persona{room.capacity > 1 ? 's' : ''}
+                                Capacidad: {room.capacity}
                               </Typography>
                             )}
                           </Box>
                         </MenuItem>
                       ))}
                     </Select>
-                    {errors.roomId && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                        {errors.roomId}
-                      </Typography>
-                    )}
                   </FormControl>
                 </Box>
               </Stack>
-
-              {/* Información adicional cuando hay tratamiento seleccionado */}
-              {formData.treatmentId && (
-                <Box mt={2} p={2} bgcolor="white" borderRadius={1} border="1px solid" borderColor="grey.300">
-                  {(() => {
-                    const selectedTreatment = treatments.find(t => t.id === formData.treatmentId);
-                    const selectedDoctor = doctors.find(d => d.id === formData.doctorId);
-                    const selectedRoom = rooms.find(r => r.id === formData.roomId);
-                    
-                    return (
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={4}>
-                          <Typography variant="caption" color="textSecondary">TRATAMIENTO</Typography>
-                          <Typography variant="body2" fontWeight="medium">
-                            {selectedTreatment?.name || 'No seleccionado'}
-                          </Typography>
-                          {selectedTreatment && (
-                            <Typography variant="caption" color="textSecondary">
-                              {selectedTreatment.duration} min • €{selectedTreatment.price}
-                            </Typography>
-                          )}
-                        </Grid>
-                        
-                        <Grid item xs={12} sm={4}>
-                          <Typography variant="caption" color="textSecondary">DOCTOR</Typography>
-                          <Typography variant="body2" fontWeight="medium">
-                            {selectedDoctor ? `Dr. ${selectedDoctor.firstName} ${selectedDoctor.lastName}` : 'No seleccionado'}
-                          </Typography>
-                          {selectedDoctor?.specialty && (
-                            <Typography variant="caption" color="textSecondary">
-                              {selectedDoctor.specialty}
-                            </Typography>
-                          )}
-                        </Grid>
-                        
-                        <Grid item xs={12} sm={4}>
-                          <Typography variant="caption" color="textSecondary">SALA</Typography>
-                          <Typography variant="body2" fontWeight="medium">
-                            {selectedRoom?.name || 'No seleccionada'}
-                          </Typography>
-                          {selectedRoom?.capacity && (
-                            <Typography variant="caption" color="textSecondary">
-                              Cap. {selectedRoom.capacity}
-                            </Typography>
-                          )}
-                        </Grid>
-                      </Grid>
-                    );
-                  })()}
-                </Box>
-              )}
             </Paper>
 
-            {/* Sección: Fecha y Hora */}
+            {/* Fecha y Hora */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
               <Box display="flex" alignItems="center" gap={1} mb={2}>
                 <CalendarIcon color="primary" />
@@ -635,7 +565,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
               </Grid>
             </Paper>
 
-            {/* Sección: Observaciones */}
+            {/* Observaciones */}
             <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
               <Typography variant="h6" mb={2}>Observaciones</Typography>
               <TextField
@@ -658,7 +588,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={loading}
+            disabled={loading || (conflictWarning && mode === 'create')}
             size="large"
           >
             {loading ? 'Guardando...' : mode === 'create' ? 'Crear Cita' : 'Guardar Cambios'}
