@@ -4,43 +4,37 @@ import {
   Paper,
   Button,
   Typography,
-  Chip,
   ToggleButtonGroup,
   ToggleButton,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
-  Divider,
   Alert,
   Snackbar,
   CircularProgress,
   IconButton,
   Menu,
-  MenuItem
+  MenuItem,
+  Tooltip
 } from '@mui/material';
 import {
   Add as AddIcon,
   CalendarMonth as CalendarIcon,
   ViewWeek as WeekIcon,
   ViewDay as DayIcon,
-  Person as PersonIcon,
   MoreVert as MoreVertIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
-  PersonOff as PersonOffIcon
+  PersonOff as PersonOffIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { appointmentService } from '../services/appointmentService';
 import AppointmentFormModal from '../components/appointments/AppointmentFormModal';
+import './AppointmentsPage.css';
 
 interface Appointment {
   id: string;
@@ -83,7 +77,6 @@ export default function AppointmentsPage() {
     try {
       const data = await appointmentService.getAll();
       
-      // Transformar datos al formato de FullCalendar
       const formattedAppointments = data.map((apt: any) => ({
         id: apt.id,
         title: apt.title || `${apt.patient?.firstName} ${apt.patient?.lastName} - ${apt.treatment?.name}`,
@@ -123,7 +116,7 @@ export default function AppointmentsPage() {
 
   const handleDateClick = (arg: any) => {
     const clickedDate = new Date(arg.date);
-    clickedDate.setHours(9, 0, 0, 0); // Hora por defecto 9:00 AM
+    clickedDate.setHours(9, 0, 0, 0);
     setSelectedDate(clickedDate);
     setFormMode('create');
     setSelectedAppointment(null);
@@ -179,6 +172,7 @@ export default function AppointmentsPage() {
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, appointment: Appointment) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setMenuAppointment(appointment);
   };
@@ -227,6 +221,24 @@ export default function AppointmentsPage() {
     }
   };
 
+  const handleDeleteAppointment = async () => {
+    if (!menuAppointment) return;
+    
+    if (!window.confirm('¿Está seguro de eliminar esta cita?')) {
+      handleMenuClose();
+      return;
+    }
+    
+    try {
+      await appointmentService.delete(menuAppointment.id);
+      showSnackbar('Cita eliminada correctamente', 'success');
+      loadAppointments();
+      handleMenuClose();
+    } catch (error) {
+      showSnackbar('Error al eliminar la cita', 'error');
+    }
+  };
+
   const getColorByStatus = (status: string): string => {
     const colors: Record<string, string> = {
       PROGRAMADA: '#2196F3',
@@ -239,82 +251,134 @@ export default function AppointmentsPage() {
     return colors[status] || '#2196F3';
   };
 
-  const getStatusChip = (status: string) => {
-    const statusConfig: Record<string, any> = {
-      PROGRAMADA: { color: 'default', label: 'Programada' },
-      CONFIRMADA: { color: 'success', label: 'Confirmada' },
-      EN_CURSO: { color: 'warning', label: 'En curso' },
-      COMPLETADA: { color: 'info', label: 'Completada' },
-      CANCELADA: { color: 'error', label: 'Cancelada' },
-      NO_SHOW: { color: 'error', label: 'No presentado' }
-    };
-    
-    const config = statusConfig[status] || statusConfig.PROGRAMADA;
-    return <Chip label={config.label} color={config.color} size="small" />;
-  };
-
-  const todayAppointments = appointments.filter(apt => {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    return apt.start.startsWith(today);
-  });
-
   return (
-    <Box sx={{ p: 0, m: 0, width: '100%', maxWidth: '100%' }}>
+    <Box sx={{ 
+      p: 0, 
+      m: 0, 
+      width: '100%', 
+      height: 'calc(100vh - 64px)',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       {/* Header */}
-      <Box sx={{ px: 4, pt: 3, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1">
-          Calendario de Citas
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setFormMode('create');
-            setSelectedAppointment(null);
-            setSelectedDate(new Date());
-            setModalOpen(true);
-          }}
-        >
-          Nueva Cita
-        </Button>
+      <Box sx={{ 
+        px: 4, 
+        pt: 2, 
+        pb: 2, 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        borderBottom: 1,
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+        flexShrink: 0
+      }}>
+        <Box>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+            Calendario de Citas
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+            {appointments.length} citas programadas
+          </Typography>
+        </Box>
+        
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <ToggleButtonGroup
+            value={view}
+            exclusive
+            onChange={(e, newView) => {
+              if (newView) {
+                setView(newView);
+                if (calendarRef.current) {
+                  calendarRef.current.getApi().changeView(newView);
+                }
+              }
+            }}
+            size="small"
+          >
+            <ToggleButton value="dayGridMonth">
+              <Tooltip title="Vista Mensual">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CalendarIcon sx={{ mr: 0.5 }} fontSize="small" />
+                  Mes
+                </Box>
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="timeGridWeek">
+              <Tooltip title="Vista Semanal">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <WeekIcon sx={{ mr: 0.5 }} fontSize="small" />
+                  Semana
+                </Box>
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="timeGridDay">
+              <Tooltip title="Vista Diaria">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <DayIcon sx={{ mr: 0.5 }} fontSize="small" />
+                  Día
+                </Box>
+              </Tooltip>
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setFormMode('create');
+              setSelectedAppointment(null);
+              setSelectedDate(new Date());
+              setModalOpen(true);
+            }}
+            size="large"
+          >
+            Nueva Cita
+          </Button>
+        </Box>
       </Box>
 
-      {/* Contenido */}
-      <Box sx={{ px: 4, pb: 4, display: 'flex', gap: 3 }}>
-        {/* Calendario */}
-        <Box sx={{ flex: 1 }}>
-          <Paper sx={{ p: 2 }}>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
-              <ToggleButtonGroup
-                value={view}
-                exclusive
-                onChange={(e, newView) => {
-                  if (newView) {
-                    setView(newView);
-                    if (calendarRef.current) {
-                      calendarRef.current.getApi().changeView(newView);
-                    }
-                  }
-                }}
-                size="small"
-              >
-                <ToggleButton value="dayGridMonth">
-                  <CalendarIcon sx={{ mr: 1 }} /> Mes
-                </ToggleButton>
-                <ToggleButton value="timeGridWeek">
-                  <WeekIcon sx={{ mr: 1 }} /> Semana
-                </ToggleButton>
-                <ToggleButton value="timeGridDay">
-                  <DayIcon sx={{ mr: 1 }} /> Día
-                </ToggleButton>
-              </ToggleButtonGroup>
+      {/* Calendario - Pantalla Completa */}
+      <Box sx={{ 
+        flex: 1,
+        px: 3, 
+        py: 2, 
+        overflow: 'auto',
+        minHeight: 0
+      }}>
+        <Paper sx={{ 
+          p: 2, 
+          height: '100%',
+          minHeight: '700px',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+              <CircularProgress />
             </Box>
-
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
+          ) : (
+            <Box sx={{ 
+              flex: 1, 
+              minHeight: 0,
+              '& .fc': { 
+                height: '100% !important',
+                minHeight: '650px'
+              },
+              '& .fc-view-harness': {
+                height: '100% !important'
+              },
+              '& .fc-scrollgrid': {
+                height: '100% !important'
+              },
+              '& .fc-timegrid-body': {
+                height: 'auto !important'
+              },
+              '& .fc-scroller': {
+                overflow: 'auto !important'
+              }
+            }}>
               <FullCalendar
                 ref={calendarRef}
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -331,118 +395,69 @@ export default function AppointmentsPage() {
                 eventDrop={handleEventDrop}
                 editable={true}
                 droppable={true}
-                height="auto"
+                height="100%"
+                contentHeight="auto"
                 slotMinTime="08:00:00"
                 slotMaxTime="21:00:00"
                 slotDuration="00:30:00"
+                expandRows={true}
+                dayMaxEvents={false}
+                allDaySlot={false}
+                nowIndicator={true}
+                scrollTime="08:00:00"
+                slotLabelInterval="01:00:00"
                 businessHours={{
                   daysOfWeek: [1, 2, 3, 4, 5, 6],
                   startTime: '09:00',
                   endTime: '20:00'
                 }}
-                eventContent={(arg) => (
-                  <Box sx={{ 
-                    p: 0.5, 
-                    width: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}>
-                    <Typography variant="caption" sx={{ 
-                      fontWeight: 500, 
-                      color: 'white',
-                      fontSize: '0.75rem'
+                eventDisplay="block"
+                slotEventOverlap={true}
+                dayMaxEventRows={false}
+                eventContent={(arg) => {
+                  const event = arg.event;
+                  const isMonthView = view === 'dayGridMonth';
+                  
+                  // Formato simplificado que funciona mejor con FullCalendar
+                  return (
+                    <div style={{ 
+                      padding: '2px 4px',
+                      width: '100%',
+                      height: '100%',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      fontSize: '11px',
+                      color: 'white'
                     }}>
-                      {arg.timeText} - {arg.event.title}
-                    </Typography>
-                    <IconButton 
-                      size="small" 
-                      sx={{ 
-                        color: 'white', 
-                        p: 0,
-                        minWidth: 20,
-                        height: 20
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMenuOpen(e, {
-                          id: arg.event.id,
-                          title: arg.event.title,
-                          start: arg.event.startStr,
-                          end: arg.event.endStr,
-                          color: arg.event.backgroundColor,
-                          extendedProps: arg.event.extendedProps
-                        });
-                      }}
-                    >
-                      <MoreVertIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                )}
+                      <div style={{ fontWeight: 'bold', fontSize: '10px' }}>
+                        {arg.timeText}
+                      </div>
+                      <div style={{ 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        marginTop: '2px'
+                      }}>
+                        {event.extendedProps?.patient?.firstName} {event.extendedProps?.patient?.lastName}
+                      </div>
+                      {!isMonthView && (
+                        <div style={{ 
+                          fontSize: '10px',
+                          opacity: 0.9,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {event.extendedProps?.treatment?.name}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }}
               />
-            )}
-          </Paper>
-        </Box>
-
-        {/* Panel lateral - Citas de hoy */}
-        <Box sx={{ width: 350, flexShrink: 0 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Citas de Hoy ({todayAppointments.length})
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <List sx={{ maxHeight: 600, overflow: 'auto' }}>
-                {todayAppointments.length === 0 ? (
-                  <Typography variant="body2" color="textSecondary" sx={{ p: 2, textAlign: 'center' }}>
-                    No hay citas programadas para hoy
-                  </Typography>
-                ) : (
-                  todayAppointments.map((apt) => (
-                    <ListItem 
-                      key={apt.id} 
-                      component="div"
-                      sx={{ 
-                        cursor: 'pointer',
-                        '&:hover': { bgcolor: 'action.hover' },
-                        borderLeft: `4px solid ${apt.color}`,
-                        mb: 1
-                      }}
-                      onClick={() => {
-                        setSelectedAppointment(apt);
-                        setFormMode('edit');
-                        setModalOpen(true);
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: apt.color }}>
-                          <PersonIcon />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={apt.title}
-                        secondary={
-                          <Box>
-                            <Typography variant="caption" display="block">
-                              {format(parseISO(apt.start), 'HH:mm')} - {format(parseISO(apt.end), 'HH:mm')}
-                            </Typography>
-                            {apt.extendedProps && (
-                              <Box sx={{ mt: 0.5 }}>
-                                {getStatusChip(apt.extendedProps.status)}
-                              </Box>
-                            )}
-                          </Box>
-                        }
-                      />
-                    </ListItem>
-                  ))
-                )}
-              </List>
-            </CardContent>
-          </Card>
-        </Box>
+            </Box>
+          )}
+        </Paper>
       </Box>
 
       {/* Menu contextual */}
@@ -451,17 +466,32 @@ export default function AppointmentsPage() {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
+        <MenuItem onClick={() => {
+          if (menuAppointment) {
+            setSelectedAppointment(menuAppointment);
+            setFormMode('edit');
+            setModalOpen(true);
+            handleMenuClose();
+          }
+        }}>
+          <EditIcon sx={{ mr: 1 }} fontSize="small" />
+          Editar cita
+        </MenuItem>
         <MenuItem onClick={handleConfirmAppointment}>
-          <CheckCircleIcon sx={{ mr: 1 }} fontSize="small" />
+          <CheckCircleIcon sx={{ mr: 1 }} fontSize="small" color="success" />
           Confirmar cita
         </MenuItem>
         <MenuItem onClick={handleCancelAppointment}>
-          <CancelIcon sx={{ mr: 1 }} fontSize="small" />
+          <CancelIcon sx={{ mr: 1 }} fontSize="small" color="warning" />
           Cancelar cita
         </MenuItem>
         <MenuItem onClick={handleMarkNoShow}>
-          <PersonOffIcon sx={{ mr: 1 }} fontSize="small" />
-          Marcar no presentado
+          <PersonOffIcon sx={{ mr: 1 }} fontSize="small" color="error" />
+          No presentado
+        </MenuItem>
+        <MenuItem onClick={handleDeleteAppointment} sx={{ color: 'error.main' }}>
+          <DeleteIcon sx={{ mr: 1 }} fontSize="small" />
+          Eliminar cita
         </MenuItem>
       </Menu>
 
